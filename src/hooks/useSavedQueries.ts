@@ -9,10 +9,18 @@ export function useSavedQueries() {
 
   const fetchQueries = useCallback(async () => {
     try {
-      const res = await fetch('/api/saved-queries?serviceName=invoices&$limit=50');
+      const res = await fetch('/api/saved-queries/find', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceName: 'invoices',
+          $limit: 50,
+          isGlobal: false,
+        }),
+      });
       if (res.ok) {
-        const data = await res.json();
-        setQueries(data);
+        const result = await res.json();
+        setQueries(result.data);
       }
     } catch (err) {
       console.error('Failed to fetch saved queries:', err);

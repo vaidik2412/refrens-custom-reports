@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, CSSProperties } from 'react';
-import ReportsListingDashboard from '@/components/reports/ReportsListingDashboard';
+import ReportsDashboard from '@/components/reports/ReportsDashboard';
 
 const containerStyle: CSSProperties = {
   maxWidth: '1200px',
@@ -16,11 +16,11 @@ const loadingStyle: CSSProperties = {
   fontSize: '14px',
 };
 
-export default function ReportsPage() {
+export default function InvoicesReportPage() {
   return (
     <div style={containerStyle}>
-      <Suspense fallback={<div style={loadingStyle}>Loading reports...</div>}>
-        <ReportsListingDashboard />
+      <Suspense fallback={<div style={loadingStyle}>Loading dashboard...</div>}>
+        <ReportsDashboard />
       </Suspense>
     </div>
   );

@@ -44,9 +44,9 @@ export function useFilters(): UseFiltersReturn {
     const hasFilters = Object.keys(filters).length > 0;
     if (hasFilters) {
       const encoded = encodeFilters(filters);
-      router.replace(`/reports?fq=${encoded}`, { scroll: false });
+      router.replace(`/reports/invoices?fq=${encoded}`, { scroll: false });
     } else {
-      router.replace('/reports', { scroll: false });
+      router.replace('/reports/invoices', { scroll: false });
     }
   }, [filters, initialized, router]);
 

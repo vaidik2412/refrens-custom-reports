@@ -1,6 +1,7 @@
 'use client';
 
 import { CSSProperties } from 'react';
+import Link from 'next/link';
 import { useFilters } from '@/hooks/useFilters';
 import { useSavedQueries } from '@/hooks/useSavedQueries';
 import { useInvoices } from '@/hooks/useInvoices';
@@ -85,6 +86,23 @@ export default function ReportsDashboard() {
 
   return (
     <div>
+      {/* Breadcrumb */}
+      <Link
+        href="/reports"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontSize: '13px',
+          color: 'var(--color-text-secondary)',
+          marginBottom: '8px',
+          textDecoration: 'none',
+          letterSpacing: '-0.25px',
+        }}
+      >
+        &#8592; Reports
+      </Link>
+
       {/* Page Header */}
       <div style={headerStyle}>
         <div style={titleSectionStyle}>
