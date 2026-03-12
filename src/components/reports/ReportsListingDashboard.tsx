@@ -4,6 +4,7 @@ import { CSSProperties, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSavedQueries } from '@/hooks/useSavedQueries';
 import { SYSTEM_REPORTS, BILL_TYPE_OPTIONS } from '@/lib/constants';
+import Button from '@/components/ui/Button';
 import { encodeFilters } from '@/lib/url-encoding';
 import { resolveDateField } from '@/lib/date-utils';
 import type { SavedQuery, SystemReport } from '@/types';
@@ -151,10 +152,17 @@ export default function ReportsListingDashboard() {
     router.push(`/reports/invoices?fq=${encoded}`);
   };
 
+  const pageHeader = (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+      <h1 style={{ ...pageHeaderStyle, margin: 0 }}>Reports</h1>
+      <Button onClick={() => router.push('/reports/new')}>+ Create New Report</Button>
+    </div>
+  );
+
   if (loading && savedQueries.length === 0) {
     return (
       <div>
-        <h1 style={pageHeaderStyle}>Reports</h1>
+        {pageHeader}
         <div
           style={{
             padding: '48px',
@@ -172,7 +180,7 @@ export default function ReportsListingDashboard() {
   if (!loading && rows.length === 0) {
     return (
       <div>
-        <h1 style={pageHeaderStyle}>Reports</h1>
+        {pageHeader}
         <div
           style={{
             padding: '48px',
@@ -195,7 +203,7 @@ export default function ReportsListingDashboard() {
 
   return (
     <div>
-      <h1 style={pageHeaderStyle}>Reports</h1>
+      {pageHeader}
 
       <div style={tableContainerStyle}>
         <table style={tableStyle}>

@@ -30,6 +30,8 @@ export interface DateFieldConfig {
   /** Always stored in days (normalized from weeks/months at save time) */
   customNumber?: number;
   customUnit?: 'days';
+  /** Which date operator was used: $between (default), $gte, or $lte */
+  dateOperator?: '$between' | '$gte' | '$lte';
   _id?: string;
 }
 

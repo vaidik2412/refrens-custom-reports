@@ -20,6 +20,8 @@ interface SaveReportModalProps {
   existingReport?: SavedQuery | null;
   /** Whether this is a "save as new" action */
   saveAsNew?: boolean;
+  /** Hide the date behaviour (Fixed/Dynamic) section — use when dates are explicitly set by query builder */
+  hideDateBehaviour?: boolean;
 }
 
 const fieldStyle: CSSProperties = {
@@ -87,6 +89,7 @@ export default function SaveReportModal({
   filters,
   existingReport,
   saveAsNew = false,
+  hideDateBehaviour = false,
 }: SaveReportModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -270,8 +273,8 @@ export default function SaveReportModal({
         />
       </div>
 
-      {/* Date Behaviour — only show if there are active date filters */}
-      {activeDateKeys.length > 0 && (
+      {/* Date Behaviour — only show if there are active date filters and not hidden */}
+      {!hideDateBehaviour && activeDateKeys.length > 0 && (
         <div style={fieldStyle}>
           <label style={labelStyle}>Date Behaviour</label>
           <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '0 0 8px' }}>

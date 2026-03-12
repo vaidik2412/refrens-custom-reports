@@ -59,10 +59,26 @@ export function buildMongoQuery(
   if (dateFields && dateFields.length > 0) {
     for (const df of dateFields) {
       const range = resolveDateField(df);
-      mongoQuery[df.accessor] = {
-        $gte: new Date(range.$gte + 'T00:00:00.000Z'),
-        $lte: new Date(range.$lte + 'T23:59:59.999Z'),
-      };
+      const op = df.dateOperator || '$between';
+      if (op === '$gte') {
+        // Single lower bound only
+        if (!mongoQuery[df.accessor] || typeof mongoQuery[df.accessor] !== 'object') {
+          mongoQuery[df.accessor] = {};
+        }
+        mongoQuery[df.accessor].$gte = new Date(range.$gte + 'T00:00:00.000Z');
+      } else if (op === '$lte') {
+        // Single upper bound only
+        if (!mongoQuery[df.accessor] || typeof mongoQuery[df.accessor] !== 'object') {
+          mongoQuery[df.accessor] = {};
+        }
+        mongoQuery[df.accessor].$lte = new Date(range.$lte + 'T23:59:59.999Z');
+      } else {
+        // $between — both bounds
+        mongoQuery[df.accessor] = {
+          $gte: new Date(range.$gte + 'T00:00:00.000Z'),
+          $lte: new Date(range.$lte + 'T23:59:59.999Z'),
+        };
+      }
     }
   }
 
