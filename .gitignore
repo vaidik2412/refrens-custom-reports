@@ -14,3 +14,4 @@ json-loader.js
 
 # Claude internal
 .claude/
+.vercel
