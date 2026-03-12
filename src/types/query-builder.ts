@@ -55,4 +55,6 @@ export interface FieldRegistryEntry {
   searchEndpoint?: string;
   category: FieldCategory;
   mongoField?: string;
+  /** If present, field only shows for these bill types. Absent = universal (all types). */
+  billTypes?: string[];
 }

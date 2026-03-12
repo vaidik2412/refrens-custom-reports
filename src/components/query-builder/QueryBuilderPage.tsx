@@ -10,7 +10,7 @@ import SaveReportModal from '@/components/reports/SaveReportModal';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useSavedQueries } from '@/hooks/useSavedQueries';
 import { conditionsToMongoQuery } from '@/lib/conditions-to-mongo';
-import { getFieldEntry } from '@/lib/field-registry';
+import { getFieldEntry, getFieldsForBillType } from '@/lib/field-registry';
 import { encodeFilters } from '@/lib/url-encoding';
 import type { QueryGroup, QueryCondition } from '@/types/query-builder';
 import type { DateFieldConfig } from '@/types';
@@ -132,6 +132,36 @@ export default function QueryBuilderPage() {
   // Save modal
   const [showSaveModal, setShowSaveModal] = useState(false);
 
+  const handleBillTypeChange = useCallback(
+    (newBillType: string) => {
+      if (group.conditions.length > 0 && billType !== null) {
+        const newFieldKeys = new Set(
+          getFieldsForBillType(newBillType).map((f) => f.key)
+        );
+        const hasIncompatible = group.conditions.some(
+          (c) => c.field && !newFieldKeys.has(c.field)
+        );
+
+        if (hasIncompatible) {
+          const confirmed = window.confirm(
+            'Changing the document type will remove filters that don\'t apply to the new type. Continue?'
+          );
+          if (!confirmed) return;
+
+          setGroup({
+            ...group,
+            conditions: group.conditions.filter(
+              (c) => !c.field || newFieldKeys.has(c.field)
+            ),
+          });
+        }
+      }
+      setBillType(newBillType);
+      setPreviewQuery(null);
+    },
+    [billType, group]
+  );
+
   const canPreview = billType !== null && hasValidConditions(group);
   const canSave = billType !== null && hasValidConditions(group);
 
@@ -207,13 +237,13 @@ export default function QueryBuilderPage() {
       {/* Step 1: Bill Type */}
       <div style={sectionStyle}>
         <h2 style={sectionTitleStyle}>1. Select Document Type</h2>
-        <BillTypeStep value={billType} onChange={setBillType} />
+        <BillTypeStep value={billType} onChange={handleBillTypeChange} />
       </div>
 
       {/* Step 2: Filters */}
       <div style={{ ...sectionStyle, ...(billType ? {} : disabledOverlayStyle) }}>
         <h2 style={sectionTitleStyle}>2. Add Filters</h2>
-        <ConditionList group={group} onUpdate={setGroup} />
+        <ConditionList group={group} onUpdate={setGroup} billType={billType} />
       </div>
 
       {/* Preview + Actions */}

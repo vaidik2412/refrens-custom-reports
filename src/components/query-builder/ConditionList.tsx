@@ -8,6 +8,7 @@ import type { QueryCondition, QueryGroup } from '@/types/query-builder';
 interface ConditionListProps {
   group: QueryGroup;
   onUpdate: (group: QueryGroup) => void;
+  billType: string | null;
 }
 
 const containerStyle: CSSProperties = {
@@ -39,7 +40,7 @@ const emptyStyle: CSSProperties = {
   fontSize: '13px',
 };
 
-export default function ConditionList({ group, onUpdate }: ConditionListProps) {
+export default function ConditionList({ group, onUpdate, billType }: ConditionListProps) {
   const usedFields = useMemo(
     () => group.conditions.map((c) => c.field).filter(Boolean),
     [group.conditions]
@@ -97,6 +98,7 @@ export default function ConditionList({ group, onUpdate }: ConditionListProps) {
             onUpdate={updateCondition}
             onRemove={removeCondition}
             usedFields={usedFields}
+            billType={billType}
           />
         ))
       )}

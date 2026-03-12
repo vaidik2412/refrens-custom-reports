@@ -1,12 +1,13 @@
 'use client';
 
 import { CSSProperties, useEffect, useRef, useState } from 'react';
-import { getFieldsByCategory, CATEGORY_LABELS } from '@/lib/field-registry';
+import { getFieldsByCategoryForBillType, CATEGORY_LABELS } from '@/lib/field-registry';
 
 interface FieldPickerProps {
   value: string;
   onChange: (fieldKey: string) => void;
   usedFields: string[];
+  billType: string | null;
 }
 
 const triggerStyle: CSSProperties = {
@@ -68,10 +69,10 @@ const itemStyle: CSSProperties = {
 
 const CATEGORY_ORDER = ['core', 'financial', 'tax', 'metadata'];
 
-export default function FieldPicker({ value, onChange, usedFields }: FieldPickerProps) {
+export default function FieldPicker({ value, onChange, usedFields, billType }: FieldPickerProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const grouped = getFieldsByCategory();
+  const grouped = getFieldsByCategoryForBillType(billType);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {

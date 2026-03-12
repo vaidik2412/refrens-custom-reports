@@ -12,6 +12,7 @@ interface ConditionRowProps {
   onUpdate: (id: string, updates: Partial<QueryCondition>) => void;
   onRemove: (id: string) => void;
   usedFields: string[];
+  billType: string | null;
 }
 
 const rowStyle: CSSProperties = {
@@ -41,7 +42,7 @@ const removeBtnStyle: CSSProperties = {
   marginTop: '2px',
 };
 
-export default function ConditionRow({ condition, onUpdate, onRemove, usedFields }: ConditionRowProps) {
+export default function ConditionRow({ condition, onUpdate, onRemove, usedFields, billType }: ConditionRowProps) {
   const handleFieldChange = (fieldKey: string) => {
     const entry = getFieldEntry(fieldKey);
     onUpdate(condition.id, {
@@ -84,6 +85,7 @@ export default function ConditionRow({ condition, onUpdate, onRemove, usedFields
         value={condition.field}
         onChange={handleFieldChange}
         usedFields={usedFields}
+        billType={billType}
       />
 
       {condition.field && (

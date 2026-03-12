@@ -46,6 +46,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     operators: DATE_OPERATORS,
     defaultOperator: '$between',
     category: 'core',
+    billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER'],
   },
   {
     key: 'client',
@@ -99,6 +100,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     operators: NUMBER_OPERATORS,
     defaultOperator: '$gte',
     category: 'financial',
+    billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER'],
   },
 
   // ─── Tax & Compliance ─────────────────────────────────────────────
@@ -118,6 +120,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     operators: BOOLEAN_OPERATORS,
     defaultOperator: '$eq',
     category: 'tax',
+    billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER', 'EXPENSERECEIPT', 'DELIVERYCHALAN'],
   },
   {
     key: 'reverseCharge',
@@ -126,6 +129,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     operators: BOOLEAN_OPERATORS,
     defaultOperator: '$eq',
     category: 'tax',
+    billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER', 'EXPENSERECEIPT', 'DELIVERYCHALAN'],
   },
   {
     key: 'placeOfSupply',
@@ -135,6 +139,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     defaultOperator: '$eq',
     options: GST_STATE_OPTIONS,
     category: 'tax',
+    billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER', 'EXPENSERECEIPT', 'DELIVERYCHALAN'],
   },
   {
     key: 'einvoiceGeneratedStatus',
@@ -144,6 +149,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     defaultOperator: '$eq',
     options: E_INVOICE_STATUS_OPTIONS,
     category: 'tax',
+    billTypes: ['INVOICE', 'CREDITNOTE'],
   },
 
   // ─── Metadata ─────────────────────────────────────────────────────
@@ -180,6 +186,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     defaultOperator: '$eq',
     options: RECURRING_FREQUENCY_OPTIONS,
     category: 'metadata',
+    billTypes: ['INVOICE', 'PROFORMAINV'],
   },
   {
     key: 'creator',
@@ -225,6 +232,25 @@ export const OPERATOR_LABELS: Record<string, string> = {
   $regex: 'contains',
   $between: 'is between',
 };
+
+/** Returns fields applicable to the given bill type. Null = all fields. */
+export function getFieldsForBillType(billType: string | null): FieldRegistryEntry[] {
+  if (!billType) return FIELD_REGISTRY;
+  return FIELD_REGISTRY.filter((f) => !f.billTypes || f.billTypes.includes(billType));
+}
+
+/** Like getFieldsByCategory, but filtered for a specific bill type. */
+export function getFieldsByCategoryForBillType(
+  billType: string | null
+): Record<string, FieldRegistryEntry[]> {
+  const fields = getFieldsForBillType(billType);
+  const grouped: Record<string, FieldRegistryEntry[]> = {};
+  for (const entry of fields) {
+    if (!grouped[entry.category]) grouped[entry.category] = [];
+    grouped[entry.category].push(entry);
+  }
+  return grouped;
+}
 
 /** Date-specific operator labels (override the defaults for clarity) */
 export const DATE_OPERATOR_LABELS: Record<string, string> = {
