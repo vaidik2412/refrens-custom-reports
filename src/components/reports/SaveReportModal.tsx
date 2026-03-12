@@ -131,18 +131,23 @@ export default function SaveReportModal({
     } else {
       setName(saveAsNew && existingReport ? `${existingReport.displayName} (Copy)` : '');
       setDescription(saveAsNew && existingReport ? existingReport.description || '' : '');
-      // Auto-create date configs for active date filters
-      const configs: Record<string, DateFieldConfig> = {};
-      for (const key of DATE_FILTER_KEYS) {
-        if (filters[key]) {
-          configs[key] = {
-            accessor: key,
-            dateBehaviour: 'fixed',
-            fixedDateRange: filters[key],
-          };
+      // When hideDateBehaviour is true, the caller handles dateFields — skip auto-population
+      if (hideDateBehaviour) {
+        setDateConfigs({});
+      } else {
+        // Auto-create date configs for active date filters
+        const configs: Record<string, DateFieldConfig> = {};
+        for (const key of DATE_FILTER_KEYS) {
+          if (filters[key]) {
+            configs[key] = {
+              accessor: key,
+              dateBehaviour: 'fixed',
+              fixedDateRange: filters[key],
+            };
+          }
         }
+        setDateConfigs(configs);
       }
-      setDateConfigs(configs);
     }
   }, [open, existingReport, saveAsNew, filters]);
 

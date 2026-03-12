@@ -188,16 +188,9 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     category: 'metadata',
     billTypes: ['INVOICE', 'PROFORMAINV'],
   },
-  {
-    key: 'creator',
-    label: 'Created By',
-    fieldType: 'search',
-    operators: SEARCH_OPERATORS,
-    defaultOperator: '$in',
-    searchEndpoint: '/api/clients/search',
-    category: 'metadata',
-    mongoField: 'addedBy',
-  },
+  // NOTE: 'Created By' (addedBy) removed — the field stores ObjectId references
+  // to users, but we have no /api/users/search endpoint yet. Re-add when user
+  // search is implemented.
 ];
 
 // ── Helpers ─────────────────────────────────────────────────────────

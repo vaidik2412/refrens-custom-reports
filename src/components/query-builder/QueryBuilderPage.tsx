@@ -213,11 +213,14 @@ export default function QueryBuilderPage() {
         dateFields,
         query,
       });
-      const encoded = encodeFilters(query);
+      // Build redirect URL using the full preview query (which includes resolved dates)
+      // so the initial results match what the user just previewed.
+      const redirectQuery = previewQuery || conditionsToMongoQuery(billType!, group);
+      const encoded = encodeFilters(redirectQuery);
       router.push(`/reports/invoices?fq=${encoded}`);
       return created;
     },
-    [createQuery, router, group]
+    [createQuery, router, group, billType, previewQuery]
   );
 
   return (

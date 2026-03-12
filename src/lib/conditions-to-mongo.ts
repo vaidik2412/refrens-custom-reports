@@ -29,8 +29,8 @@ export function conditionsToMongoQuery(
       continue;
     }
 
-    // For $between, skip if neither from nor to is set
-    if (condition.operator === '$between') {
+    // For $between: dynamic dates are always valid; fixed dates need at least one bound
+    if (condition.operator === '$between' && condition.value?.dynamic !== true) {
       const { from, to } = (condition.value || {}) as { from?: string; to?: string };
       if (!from && !to) continue;
     }
