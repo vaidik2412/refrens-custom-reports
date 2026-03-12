@@ -1,0 +1,115 @@
+/* Jupiter Design System — CSS Custom Properties */
+:root {
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Neutral Palette */
+  --color-text-primary: #2F3945;
+  --color-text-dark: #212730;
+  --color-text-label: #2C323A;
+  --color-text-column: #686F78;
+  --color-text-secondary: #8B95A1;
+  --color-icon-border: #C7CDD6;
+  --color-border-subtle: #DCE0E3;
+  --color-tab-underline-bg: #E8EAED;
+  --color-border: #EEF2F5;
+  --color-drawer-border: #EFF2F6;
+  --color-bg-alt: #F7F9FA;
+  --color-bg-card: #FFFFFF;
+
+  /* Brand / Accent */
+  --color-brand-purple: #7B3EFF;
+  --color-brand-purple-hover: #8736E7;
+  --color-cta-primary: #4F46E5;
+  --color-cta-primary-hover: #4338CA;
+
+  /* Token Chip */
+  --color-chip-bg: #F7F3FD;
+  --color-chip-border: #EDE4FB;
+  --color-chip-text: #281347;
+
+  /* Functional */
+  --color-success: #009D40;
+  --color-success-bg: #EAFFF4;
+  --color-success-text: #007E35;
+  --color-warning: #DE8600;
+  --color-warning-bg: #FFFAF1;
+  --color-error: #EF4444;
+  --color-error-bg: #FEE2E2;
+  --color-error-text: #991B1B;
+
+  /* Border Radius */
+  --radius-input: 8px;
+  --radius-tag: 6px;
+  --radius-card: 12px;
+  --radius-modal: 16px;
+  --radius-pill: 28px;
+
+  /* Shadows */
+  --shadow-l1: 0px 2px 8px rgba(20, 28, 39, 0.12);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.15);
+  --shadow-drawer: -4px 0 24px rgba(20, 28, 39, 0.12);
+
+  /* Sizing */
+  --width-modal: 560px;
+  --width-drawer: 896px;
+  --height-table-row: 40px;
+  --height-button: 36px;
+  --height-drawer-header: 72px;
+
+  /* Spacing (8px grid) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.25px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-alt);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-icon-border);
+  border-radius: 3px;
+}

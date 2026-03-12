@@ -1,0 +1,16 @@
+.env
+node_modules/
+.next/
+out/
+
+# Query result exports
+query_result_*.json
+
+# Local Mongoose schema source files (production only)
+invoices.js
+invoiceItems.js
+documentCommonFields.js
+json-loader.js
+
+# Claude internal
+.claude/
