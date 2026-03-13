@@ -103,6 +103,15 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     category: 'financial',
     billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER'],
   },
+  {
+    key: 'adjustedCredit',
+    label: 'Adjusted via Credit Note',
+    fieldType: 'boolean',
+    operators: BOOLEAN_OPERATORS,
+    defaultOperator: '$eq',
+    category: 'financial',
+    billTypes: ['INVOICE'],
+  },
 
   // ─── Tax & Compliance ─────────────────────────────────────────────
   {
@@ -189,6 +198,14 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     options: RECURRING_FREQUENCY_OPTIONS,
     category: 'metadata',
     billTypes: ['INVOICE', 'PROFORMAINV'],
+  },
+  {
+    key: 'hasLinkedInvoice',
+    label: 'Linked Invoice',
+    fieldType: 'boolean',
+    operators: BOOLEAN_OPERATORS,
+    defaultOperator: '$eq',
+    category: 'metadata',
   },
   // NOTE: 'Created By' (addedBy) removed — the field stores ObjectId references
   // to users, but we have no /api/users/search endpoint yet. Re-add when user
