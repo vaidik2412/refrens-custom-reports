@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
       displayName: body.displayName,
       isArchived: false,
       description: body.description || '',
+      ...(body.queryGroupTree ? { queryGroupTree: body.queryGroupTree } : {}),
       createdAt: now,
       updatedAt: now,
       __v: 0,

@@ -53,6 +53,7 @@ export function useSavedQueries() {
       description: string;
       dateFields: DateFieldConfig[];
       query: Record<string, any>;
+      queryGroupTree?: any;
     }) => {
       const canonicalPayload = buildSavedQueryPayload(payload.query, payload.dateFields);
       const res = await fetch('/api/saved-queries', {

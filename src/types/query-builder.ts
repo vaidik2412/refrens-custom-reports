@@ -33,7 +33,7 @@ export interface QueryCondition {
   value: any;
 }
 
-// ── Group container (future: logical operator toggling) ─────────────
+// ── Group container ─────────────────────────────────────────────────
 
 export type LogicalOperator = 'AND' | 'OR';
 
@@ -41,7 +41,7 @@ export interface QueryGroup {
   id: string;
   logicalOperator: LogicalOperator;
   conditions: QueryCondition[];
-  // Future: groups: QueryGroup[] for nested groups
+  groups: QueryGroup[];
 }
 
 // ── Field Registry Entry ────────────────────────────────────────────
