@@ -221,12 +221,24 @@ export const SECONDARY_FILTERS: FilterFieldConfig[] = [
     primary: false,
   },
   {
+    key: 'adjustedCredit',
+    label: 'Adjusted via Credit Note',
+    type: 'boolean',
+    primary: false,
+  },
+  {
     key: 'recurringInvoice.frequency',
     label: 'Recurring Frequency',
     type: 'select',
     options: RECURRING_FREQUENCY_OPTIONS,
     primary: false,
     placeholder: 'All Frequencies',
+  },
+  {
+    key: 'hasLinkedInvoice',
+    label: 'Linked Invoice',
+    type: 'boolean',
+    primary: false,
   },
 ];
 
