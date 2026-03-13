@@ -2,6 +2,8 @@ const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 const {
+  buildClientValueMap,
+  looksLikeObjectId,
   PROTOTYPE_BUSINESS_ID,
   SAVED_QUERY_CONTRACT_VERSION,
   normalizeSavedQueryDoc,
@@ -14,53 +16,21 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-async function buildClientValueMap(db) {
-  const rows = await db
-    .collection('invoices')
-    .aggregate([
-      {
-        $match: {
-          client: { $ne: null },
-          'billedTo.name': { $ne: null },
-          isRemoved: { $ne: true },
-          isHardRemoved: { $ne: true },
-        },
-      },
-      {
-        $group: {
-          _id: '$client',
-          label: { $first: '$billedTo.name' },
-        },
-      },
-    ])
-    .toArray();
-
-  const labelsToIds = new Map();
-  const idsToLabels = new Map();
-
-  for (const row of rows) {
-    const id = String(row._id);
-    const label = row.label;
-    if (!label) continue;
-    idsToLabels.set(id, label);
-    const existing = labelsToIds.get(label) || [];
-    if (!existing.includes(id)) existing.push(id);
-    labelsToIds.set(label, existing);
-  }
-
-  return { labelsToIds, idsToLabels };
-}
-
 function isPrototypeQuery(doc) {
   const businessId = doc.business ? String(doc.business) : null;
+  const clientFilterValues = doc.query?.client?.$in;
+  const hasLegacyClientNames =
+    Array.isArray(clientFilterValues) &&
+    clientFilterValues.some((value) => !looksLikeObjectId(value));
+
   return (
     businessId === String(PROTOTYPE_BUSINESS_ID) ||
-    doc.serviceName === 'invoices' ||
     doc._systemMeta?.source?.startsWith('seed-') ||
-    doc.query?.client ||
     doc.query?.['billedTo.name'] ||
     doc.query?.creator ||
-    doc.query?.addedBy ||
+    hasLegacyClientNames ||
+    doc.query?.['recurringInvoice.frequency']?.$ne === 'NONE' ||
+    doc.query?.einvoiceGeneratedStatus === 'NOT GENERATED' ||
     doc.dateFields?.some((field) => field.dynamicPreset === 'custom')
   );
 }

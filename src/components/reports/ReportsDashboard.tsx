@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useEffect } from 'react';
+import { CSSProperties, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useFilters } from '@/hooks/useFilters';
@@ -38,6 +38,7 @@ const pageHeaderStyle: CSSProperties = {
 
 export default function ReportsDashboard() {
   const searchParams = useSearchParams();
+  const hydratedReportKeyRef = useRef<string | null>(null);
   const {
     filters,
     setFilter,
@@ -54,6 +55,7 @@ export default function ReportsDashboard() {
   const {
     queries: savedQueries,
     loading: queriesLoading,
+    error: savedQueriesError,
     createQuery,
     updateQuery,
     deleteQuery,
@@ -73,8 +75,13 @@ export default function ReportsDashboard() {
 
     const reportId = searchParams.get('reportId');
     const reportKind = searchParams.get('reportKind');
+    const reportKey =
+      reportId && (reportKind === 'saved' || reportKind === 'system')
+        ? `${reportKind}:${reportId}`
+        : null;
 
     if (!reportId || (reportKind !== 'saved' && reportKind !== 'system')) {
+      hydratedReportKeyRef.current = null;
       return;
     }
 
@@ -85,6 +92,11 @@ export default function ReportsDashboard() {
       activeReport && 'isSystem' in activeReport && activeReport.isSystem ? 'system' : 'saved';
 
     if (activeId === reportId && activeKind === reportKind) {
+      hydratedReportKeyRef.current = reportKey;
+      return;
+    }
+
+    if (hydratedReportKeyRef.current === reportKey) {
       return;
     }
 
@@ -97,10 +109,12 @@ export default function ReportsDashboard() {
 
     if (Object.keys(filters).length === 0) {
       applyReport(report);
+      hydratedReportKeyRef.current = reportKey;
       return;
     }
 
     hydrateReportContext(report);
+    hydratedReportKeyRef.current = reportKey;
   }, [
     activeReport,
     applyReport,
@@ -177,6 +191,23 @@ export default function ReportsDashboard() {
           onReportUpdated={handleReportUpdated}
         />
       </div>
+
+      {savedQueriesError && (
+        <div
+          style={{
+            marginBottom: '12px',
+            padding: '10px 12px',
+            border: '1px solid rgba(214, 78, 67, 0.2)',
+            borderRadius: 'var(--radius-input)',
+            background: '#FFF6F3',
+            color: '#A33A2F',
+            fontSize: '13px',
+            lineHeight: 1.5,
+          }}
+        >
+          Couldn&apos;t load saved reports from MongoDB. Showing built-in system reports only.
+        </div>
+      )}
 
       {/* Active report indicator */}
       {activeReport && 'displayName' in activeReport && (

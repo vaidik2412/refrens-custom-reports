@@ -16,9 +16,9 @@ function formatDateOnly(value: unknown): string | undefined {
   const parsed = value instanceof Date ? value : new Date(String(value));
   if (Number.isNaN(parsed.getTime())) return undefined;
 
-  const year = parsed.getUTCFullYear();
-  const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(parsed.getUTCDate()).padStart(2, '0');
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
@@ -45,12 +45,12 @@ function normalizeCustomPeriod(config: DateFieldConfig): DateFieldConfig {
   const days =
     typeof config.customNumber === 'number' && Number.isFinite(config.customNumber)
       ? Math.max(1, Math.round(config.customNumber * multiplier))
-      : undefined;
+      : 7;
 
   return {
     ...config,
     customNumber: days,
-    customUnit: days ? 'days' : undefined,
+    customUnit: 'days',
     customDirection: config.customDirection || 'this',
   };
 }

@@ -13,6 +13,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const { filter, sort, limit, skip } = parseQueryParams(searchParams);
 
+    // Backward-compat: legacy callers used `creator`; production uses `addedBy`.
+    if (filter.creator !== undefined && filter.addedBy === undefined) {
+      filter.addedBy = filter.creator;
+      delete filter.creator;
+    }
+
     // Backward-compat: legacy saved queries stored client names instead of client ids.
     if (filter.client?.$in && Array.isArray(filter.client.$in)) {
       const allLegacyNames = filter.client.$in.every((value: unknown) => !looksLikeObjectId(value));

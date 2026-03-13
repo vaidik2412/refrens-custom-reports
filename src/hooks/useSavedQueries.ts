@@ -14,9 +14,11 @@ function normalizeSavedQuery(response: SavedQuery): SavedQuery {
 export function useSavedQueries() {
   const [queries, setQueries] = useState<SavedQuery[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchQueries = useCallback(async () => {
     try {
+      setError(null);
       const res = await fetch('/api/saved-queries/find', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -26,12 +28,16 @@ export function useSavedQueries() {
           isGlobal: false,
         }),
       });
-      if (res.ok) {
-        const result = await res.json();
-        setQueries(result.data.map(normalizeSavedQuery));
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch saved queries (${res.status})`);
       }
+
+      const result = await res.json();
+      setQueries(result.data.map(normalizeSavedQuery));
     } catch (err) {
       console.error('Failed to fetch saved queries:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch saved queries');
     } finally {
       setLoading(false);
     }
@@ -110,5 +116,5 @@ export function useSavedQueries() {
     [updateQuery]
   );
 
-  return { queries, loading, createQuery, updateQuery, deleteQuery, refetch: fetchQueries };
+  return { queries, loading, error, createQuery, updateQuery, deleteQuery, refetch: fetchQueries };
 }

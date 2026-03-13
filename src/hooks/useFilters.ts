@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { encodeFilters, decodeFilters } from '@/lib/url-encoding';
 import type { SavedQuery, SystemReport, DateFieldConfig } from '@/types';
@@ -118,8 +118,8 @@ export function useFilters(): UseFiltersReturn {
   const clearFilters = useCallback(() => {
     setFilters({});
     setDateFieldsState([]);
-    setReportRef(null);
-  }, []);
+    setActiveReportState(null);
+  }, [setActiveReportState]);
 
   const applyReport = useCallback(
     (report: SavedQuery | SystemReport) => {
@@ -150,8 +150,7 @@ export function useFilters(): UseFiltersReturn {
     [setActiveReportState]
   );
 
-  // Determine if current filters differ from the active report's stored query
-  const isDirty = (() => {
+  const isDirty = useMemo(() => {
     if (!activeReport) return Object.keys(filters).length > 0;
     if ('isSystem' in activeReport && activeReport.isSystem) {
       return stableSerialize(filters) !== stableSerialize(activeReport.query || {});
@@ -165,7 +164,7 @@ export function useFilters(): UseFiltersReturn {
         dateFields: normalizeDateFields(report.dateFields),
       })
     );
-  })();
+  }, [activeReport, dateFields, filters]);
 
   const setDateFields = useCallback((fields: DateFieldConfig[]) => {
     setDateFieldsState(normalizeDateFields(fields));

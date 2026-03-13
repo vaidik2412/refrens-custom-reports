@@ -2,6 +2,7 @@ const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 const {
+  buildClientValueMap,
   buildMongoQuery,
   SAVED_QUERY_CONTRACT_VERSION,
 } = require('./savedQueryContract.cjs');
@@ -11,43 +12,6 @@ const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
   console.error('Error: MONGODB_URI is not defined in the .env file.');
   process.exit(1);
-}
-
-async function buildClientValueMap(db) {
-  const rows = await db
-    .collection('invoices')
-    .aggregate([
-      {
-        $match: {
-          client: { $ne: null },
-          'billedTo.name': { $ne: null },
-          isRemoved: { $ne: true },
-          isHardRemoved: { $ne: true },
-        },
-      },
-      {
-        $group: {
-          _id: '$client',
-          label: { $first: '$billedTo.name' },
-        },
-      },
-    ])
-    .toArray();
-
-  const labelsToIds = new Map();
-  const idsToLabels = new Map();
-
-  for (const row of rows) {
-    const id = String(row._id);
-    const label = row.label;
-    if (!label) continue;
-    idsToLabels.set(id, label);
-    const existing = labelsToIds.get(label) || [];
-    if (!existing.includes(id)) existing.push(id);
-    labelsToIds.set(label, existing);
-  }
-
-  return { labelsToIds, idsToLabels };
 }
 
 async function runSavedQueryCheck(db, savedQuery, clientValueMap) {

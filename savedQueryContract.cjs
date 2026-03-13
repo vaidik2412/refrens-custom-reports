@@ -20,10 +20,47 @@ function formatDateOnly(value) {
   const parsed = value instanceof Date ? value : new Date(String(value));
   if (Number.isNaN(parsed.getTime())) return undefined;
 
-  const year = parsed.getUTCFullYear();
-  const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(parsed.getUTCDate()).padStart(2, '0');
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+async function buildClientValueMap(db) {
+  const rows = await db
+    .collection('invoices')
+    .aggregate([
+      {
+        $match: {
+          client: { $ne: null },
+          'billedTo.name': { $ne: null },
+          isRemoved: { $ne: true },
+          isHardRemoved: { $ne: true },
+        },
+      },
+      {
+        $group: {
+          _id: '$client',
+          label: { $first: '$billedTo.name' },
+        },
+      },
+    ])
+    .toArray();
+
+  const labelsToIds = new Map();
+  const idsToLabels = new Map();
+
+  for (const row of rows) {
+    const id = String(row._id);
+    const label = row.label;
+    if (!label) continue;
+    idsToLabels.set(id, label);
+    const existing = labelsToIds.get(label) || [];
+    if (!existing.includes(id)) existing.push(id);
+    labelsToIds.set(label, existing);
+  }
+
+  return { labelsToIds, idsToLabels };
 }
 
 function normalizeFixedDateRange(range) {
@@ -336,6 +373,8 @@ function toMongoComparable(value, field) {
         next[key] = new Date(`${rawEntry}T00:00:00.000Z`);
       } else if ((key === '$lte' || key === '$lt') && typeof rawEntry === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawEntry)) {
         next[key] = new Date(`${rawEntry}T23:59:59.999Z`);
+      } else if (key === '$ne' && typeof rawEntry === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawEntry)) {
+        next[key] = new Date(`${rawEntry}T00:00:00.000Z`);
       } else {
         next[key] = toMongoComparable(rawEntry, field);
       }
@@ -443,6 +482,7 @@ module.exports = {
   PROTOTYPE_BUSINESS_ID,
   PROTOTYPE_USER_ID,
   SAVED_QUERY_CONTRACT_VERSION,
+  buildClientValueMap,
   buildMongoQuery,
   createSavedQueryDoc,
   looksLikeObjectId,

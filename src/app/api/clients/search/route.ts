@@ -6,13 +6,14 @@ export async function GET(request: NextRequest) {
     const db = await getDb();
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q') || '';
+    const escapedQuery = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     const pipeline: any[] = [
       // Only non-removed invoices
       { $match: { isRemoved: false, isHardRemoved: false, client: { $ne: null } } },
       // Filter by billedTo.name if search query provided
       ...(q
-        ? [{ $match: { 'billedTo.name': { $regex: q, $options: 'i' } } }]
+        ? [{ $match: { 'billedTo.name': { $regex: escapedQuery, $options: 'i' } } }]
         : []),
       // Group by client id to produce production-grade saved query filters
       {

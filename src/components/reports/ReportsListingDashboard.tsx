@@ -124,7 +124,7 @@ const tdStyle: CSSProperties = {
 
 export default function ReportsListingDashboard() {
   const router = useRouter();
-  const { queries: savedQueries, loading } = useSavedQueries();
+  const { queries: savedQueries, loading, error } = useSavedQueries();
 
   const rows = useMemo(
     () => buildReportRows(SYSTEM_REPORTS, savedQueries),
@@ -203,6 +203,24 @@ export default function ReportsListingDashboard() {
   return (
     <div>
       {pageHeader}
+
+      {error && (
+        <div
+          style={{
+            marginBottom: '16px',
+            padding: '12px 14px',
+            border: '1px solid rgba(214, 78, 67, 0.2)',
+            borderRadius: 'var(--radius-input)',
+            background: '#FFF6F3',
+            color: '#A33A2F',
+            fontSize: '13px',
+            lineHeight: 1.5,
+          }}
+        >
+          Couldn&apos;t load saved reports from MongoDB. Showing built-in system reports only.
+          <span style={{ marginLeft: '6px', opacity: 0.8 }}>{error}</span>
+        </div>
+      )}
 
       <div style={tableContainerStyle}>
         <table style={tableStyle}>
