@@ -4,6 +4,7 @@ import { CSSProperties, useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import RadioGroup from '@/components/ui/RadioGroup';
 import { DYNAMIC_PRESET_LABELS, PRESET_GROUPS } from '@/lib/date-utils';
+import { buildSavedQueryPayload, normalizeDateFields } from '@/lib/saved-query-contract';
 import type { DateFieldConfig, DynamicPreset, SavedQuery } from '@/types';
 
 interface SaveReportModalProps {
@@ -149,30 +150,27 @@ export default function SaveReportModal({
         setDateConfigs(configs);
       }
     }
-  }, [open, existingReport, saveAsNew, filters]);
+  }, [open, existingReport, saveAsNew, filters, hideDateBehaviour]);
 
   const handleSave = async () => {
     if (!name.trim()) return;
     setSaving(true);
 
     // Build clean query without date fields that are dynamic
-    const query: Record<string, any> = { ...filters };
     const dateFields: DateFieldConfig[] = [];
 
     for (const [accessor, config] of Object.entries(dateConfigs)) {
       dateFields.push(config);
-      if (config.dateBehaviour === 'dynamic') {
-        // Remove the date filter from query — it will be resolved dynamically
-        delete query[accessor];
-      }
     }
+
+    const payload = buildSavedQueryPayload(filters, normalizeDateFields(dateFields));
 
     try {
       await onSave({
         displayName: name.trim(),
         description: description.trim(),
-        dateFields,
-        query,
+        dateFields: payload.dateFields,
+        query: payload.query,
       });
       onClose();
     } catch {

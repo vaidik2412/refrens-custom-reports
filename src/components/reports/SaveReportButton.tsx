@@ -4,9 +4,11 @@ import { useState } from 'react';
 import SplitButton from '@/components/ui/SplitButton';
 import SaveReportModal from './SaveReportModal';
 import type { SavedQuery, SystemReport, DateFieldConfig } from '@/types';
+import { buildSavedQueryPayload } from '@/lib/saved-query-contract';
 
 interface SaveReportButtonProps {
   filters: Record<string, any>;
+  dateFields: DateFieldConfig[];
   activeReport: (SavedQuery | SystemReport) | null;
   isDirty: boolean;
   onCreateReport: (payload: {
@@ -18,6 +20,7 @@ interface SaveReportButtonProps {
   onUpdateReport: (id: string, payload: Partial<SavedQuery>) => Promise<SavedQuery>;
   onDeleteReport: (id: string) => Promise<void>;
   onReportCreated?: (report: SavedQuery) => void;
+  onReportUpdated?: (report: SavedQuery) => void;
 }
 
 function isCustomReport(report: SavedQuery | SystemReport | null): report is SavedQuery {
@@ -31,12 +34,14 @@ function isEditableReport(report: SavedQuery | SystemReport | null): report is S
 
 export default function SaveReportButton({
   filters,
+  dateFields,
   activeReport,
   isDirty,
   onCreateReport,
   onUpdateReport,
   onDeleteReport,
   onReportCreated,
+  onReportUpdated,
 }: SaveReportButtonProps) {
   const [modalMode, setModalMode] = useState<'create' | 'save-as' | 'edit' | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -51,7 +56,9 @@ export default function SaveReportButton({
       return {
         label: 'Save Report',
         action: async () => {
-          await onUpdateReport(editableReport._id, { query: filters } as any);
+          const canonicalPayload = buildSavedQueryPayload(filters, dateFields);
+          const updated = await onUpdateReport(editableReport._id, canonicalPayload as any);
+          onReportUpdated?.(updated);
         },
       };
     }
@@ -103,12 +110,13 @@ export default function SaveReportButton({
     query: Record<string, any>;
   }) => {
     if (modalMode === 'edit' && editableReport) {
-      await onUpdateReport(editableReport._id, {
+      const updated = await onUpdateReport(editableReport._id, {
         displayName: payload.displayName,
         description: payload.description,
         dateFields: payload.dateFields,
         query: payload.query,
       } as any);
+      onReportUpdated?.(updated);
     } else {
       const created = await onCreateReport(payload);
       onReportCreated?.(created);
@@ -150,14 +158,14 @@ export default function SaveReportButton({
       )}
 
       {/* Save / Save As / Edit Modal */}
-      <SaveReportModal
-        open={modalMode !== null}
-        onClose={() => setModalMode(null)}
-        onSave={handleModalSave}
-        filters={filters}
-        existingReport={editableReport}
-        saveAsNew={modalMode === 'save-as' || modalMode === 'create'}
-      />
+        <SaveReportModal
+          open={modalMode !== null}
+          onClose={() => setModalMode(null)}
+          onSave={handleModalSave}
+          filters={filters}
+          existingReport={editableReport}
+          saveAsNew={modalMode === 'save-as' || modalMode === 'create'}
+        />
 
       {/* Delete Confirmation */}
       {confirmDelete && editableReport && (

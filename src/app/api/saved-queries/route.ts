@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
+import { buildSavedQueryPayload, normalizeDateFields } from '@/lib/saved-query-contract';
 
 // Hardcoded IDs matching setupSavedQueries.cjs
 const BUSINESS_ID = '66dfea2f0be47436d6ff2ca5';
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'displayName is required' }, { status: 400 });
     }
 
+    const payload = buildSavedQueryPayload(body.query || {}, normalizeDateFields(body.dateFields || []));
     const now = new Date();
     const doc = {
       isGlobal: false,
@@ -50,8 +52,8 @@ export async function POST(request: NextRequest) {
       querySubType: body.querySubType || 'FIND',
       source: 'DASHBOARD',
       serviceName: body.serviceName || 'invoices',
-      query: body.query || {},
-      dateFields: (body.dateFields || []).map((df: any) => ({
+      query: payload.query,
+      dateFields: payload.dateFields.map((df: any) => ({
         ...df,
         _id: new ObjectId(),
       })),

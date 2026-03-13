@@ -10,7 +10,7 @@ export const SYSTEM_REPORTS: SystemReport[] = [
   {
     id: 'recurring-invoice',
     displayName: 'Recurring Invoice',
-    query: { billType: 'INVOICE', 'recurringInvoice.frequency': { $ne: 'NONE' } },
+    query: { billType: 'INVOICE', 'recurringInvoice.frequency': { $ne: 'None' }, isRemoved: false },
     isSystem: true,
   },
   {
@@ -77,12 +77,12 @@ export const SOURCE_OPTIONS = [
 ];
 
 export const RECURRING_FREQUENCY_OPTIONS = [
-  { label: 'None', value: 'NONE' },
-  { label: 'Daily', value: 'DAILY' },
-  { label: 'Weekly', value: 'WEEKLY' },
-  { label: 'Monthly', value: 'MONTHLY' },
-  { label: 'Quarterly', value: 'QUARTERLY' },
-  { label: 'Yearly', value: 'YEARLY' },
+  { label: 'None', value: 'None' },
+  { label: 'Daily', value: 'Daily' },
+  { label: 'Weekly', value: 'Weekly' },
+  { label: 'Monthly', value: 'Monthly' },
+  { label: 'Quarterly', value: 'Quarterly' },
+  { label: 'Yearly', value: 'Yearly' },
 ];
 
 export const GST_STATE_OPTIONS = [
@@ -223,13 +223,6 @@ export const SECONDARY_FILTERS: FilterFieldConfig[] = [
     primary: false,
     placeholder: 'All Frequencies',
   },
-  {
-    key: 'creator',
-    label: 'Created By',
-    type: 'search-select',
-    primary: false,
-    placeholder: 'Search creator...',
-  },
 ];
 
 export const ALL_FILTERS = [...PRIMARY_FILTERS, ...SECONDARY_FILTERS];
@@ -317,6 +310,15 @@ export function formatFilterValue(key: string, value: any): string {
     const gte = value.$gte || '';
     const lte = value.$lte || '';
     return `${gte} – ${lte}`;
+  }
+
+  if (config.type === 'search-select' && typeof value === 'object' && value !== null) {
+    if (Array.isArray(value.$inOptions) && value.$inOptions.length > 0) {
+      return value.$inOptions.map((option: { label: string }) => option.label).join(', ');
+    }
+    if (Array.isArray(value.$in)) {
+      return value.$in.join(', ');
+    }
   }
 
   if (config.type === 'number-range' && typeof value === 'object') {

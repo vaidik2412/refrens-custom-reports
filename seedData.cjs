@@ -1,5 +1,6 @@
 const { MongoClient, ObjectId } = require('mongodb');
 require('dotenv').config();
+const { normalizeInvoiceDocument } = require('./invoiceSeedContract.cjs');
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -40,7 +41,9 @@ const getBaseInvoice = (idx, invoiceNumberPrefix, vendorId) => ({
   dueDate: new Date(Date.now() + Math.random() * 15 * 24 * 60 * 60 * 1000),
   currency: 'INR',
   conversionRates: { INR: 1 },
-  totalConversions: { total: 0, subTotal: 0 },
+  totalConversions: {
+    INR: { total: 0, paid: 0, tds: 0, transactionCharge: 0, due: 0 }
+  },
   totals: {
     subTotal: 0,
     amount: 0,
@@ -52,7 +55,7 @@ const getBaseInvoice = (idx, invoiceNumberPrefix, vendorId) => ({
     totalRoundOff: 0,
     amountRoundOff: 0
   },
-  balance: { due: 0, received: 0 },
+  balance: { paid: 0, tds: 0, transactionCharge: 0, due: 0 },
   isSourceConverted: false,
   // Filter-critical defaults (Mongoose defaults don't apply via raw MongoClient)
   isRemoved: false,
@@ -63,6 +66,11 @@ const getBaseInvoice = (idx, invoiceNumberPrefix, vendorId) => ({
   einvoiceGeneratedStatus: 'NOT_GENERATED',
   taxType: 'INDIA',
   source: 'DASHBOARD',
+  recurringInvoice: {
+    frequency: 'None',
+    status: 'DRAFT',
+    endDate: null
+  },
   // Default empty arrays for $size / $exists queries
   payments: [],
   creditClaims: [],
@@ -190,6 +198,12 @@ for (let i = 0; i < 5; i++) {
       r_str_001: `V-8910${i}`,
       r_str_002: 'Marketing',
       r_num_001: 50 + i
+    },
+    recurringInvoice: {
+      frequency: 'Monthly',
+      periodInDays: 30,
+      nextDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
+      status: 'DRAFT'
     },
     items: [
       {
@@ -573,6 +587,12 @@ for (let i = 0; i < 5; i++) {
       r_str_001: `ENT-${i}`,
       r_str_002: 'Enterprise',
       r_num_001: 200 + i
+    },
+    recurringInvoice: {
+      frequency: 'Yearly',
+      periodInDays: 365,
+      nextDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      status: 'DRAFT'
     },
     items: [
       {
@@ -1099,9 +1119,8 @@ for (let i = 0; i < 5; i++) {
   });
 
   // ──────────────────────────────────────────────────────────────────────
-  // Scenario 14: Invoice — E-Invoice NOT GENERATED (pending IRN)
+  // Scenario 14: Invoice — E-Invoice NOT_GENERATED (pending IRN)
   // Satisfies: TD3 (E-Invoices Without IRN)
-  // Note: einvoiceGeneratedStatus uses SPACE: 'NOT GENERATED' (from prod)
   // ──────────────────────────────────────────────────────────────────────
   let sc14Sub = 85000 + (2000 * i);
   let sc14Tax = sc14Sub * 0.18;
@@ -1112,7 +1131,7 @@ for (let i = 0; i < 5; i++) {
     business: vendorIds.techPvtLtd,
     clientProfile: clientIds.alphaCorp,
     status: 'UNPAID',
-    einvoiceGeneratedStatus: 'NOT GENERATED',
+    einvoiceGeneratedStatus: 'NOT_GENERATED',
     invoiceTitle: 'Cloud Migration Services',
     igst: true,
     tags: ['E-Invoice-Pending', 'Services'],
@@ -1565,12 +1584,13 @@ async function runSeed() {
     
     const db = client.db('invoices'); 
     const col = db.collection('invoices');
+    const normalizedDocuments = documents.map((doc) => normalizeInvoiceDocument(doc));
     
     console.log(`Clearing existing documents (if any) to ensure fresh seed...`);
-    await col.deleteMany({ _systemMeta: { source: 'seed-script' } });
+    await col.deleteMany({ '_systemMeta.source': 'seed-script' });
 
-    console.log(`Inserting ${documents.length} sample invoices into the "invoices" collection with updated totals/conversions objects...`);
-    const result = await col.insertMany(documents);
+    console.log(`Inserting ${normalizedDocuments.length} sample invoices into the "invoices" collection with canonical production-parity shape...`);
+    const result = await col.insertMany(normalizedDocuments);
     console.log(`${result.insertedCount} documents were successfully inserted.`);
   } catch (err) {
     console.error('Error seeding data:', err.stack);

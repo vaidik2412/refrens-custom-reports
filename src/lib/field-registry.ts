@@ -56,7 +56,6 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     defaultOperator: '$in',
     searchEndpoint: '/api/clients/search',
     category: 'core',
-    mongoField: 'billedTo.name',
   },
   {
     key: 'currency',

@@ -4,7 +4,15 @@ import { useState, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { encodeFilters, decodeFilters } from '@/lib/url-encoding';
 import type { SavedQuery, SystemReport, DateFieldConfig } from '@/types';
-import { resolveDateField } from '@/lib/date-utils';
+import {
+  buildSavedQueryPayload,
+  isDateAccessor,
+  materializeSavedQueryFilters,
+  normalizeDateFields,
+  removeDateField,
+  stableSerialize,
+  upsertFixedDateField,
+} from '@/lib/saved-query-contract';
 
 interface UseFiltersReturn {
   filters: Record<string, any>;
@@ -12,6 +20,7 @@ interface UseFiltersReturn {
   removeFilter: (key: string) => void;
   clearFilters: () => void;
   applyReport: (report: SavedQuery | SystemReport) => void;
+  hydrateReportContext: (report: SavedQuery | SystemReport) => void;
   activeReport: (SavedQuery & { isSystem?: false }) | (SystemReport & { isSystem: true }) | null;
   setActiveReport: (report: any) => void;
   isDirty: boolean;
@@ -19,21 +28,46 @@ interface UseFiltersReturn {
   setDateFields: (fields: DateFieldConfig[]) => void;
 }
 
+type ReportRef = {
+  id: string;
+  kind: 'saved' | 'system';
+};
+
+function getReportRef(report: SavedQuery | SystemReport): ReportRef {
+  if ('isSystem' in report && report.isSystem) {
+    return { id: report.id, kind: 'system' };
+  }
+
+  return { id: (report as SavedQuery)._id, kind: 'saved' };
+}
+
 export function useFilters(): UseFiltersReturn {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [activeReport, setActiveReport] = useState<any>(null);
-  const [dateFields, setDateFields] = useState<DateFieldConfig[]>([]);
+  const [dateFields, setDateFieldsState] = useState<DateFieldConfig[]>([]);
+  const [reportRef, setReportRef] = useState<ReportRef | null>(null);
   const [initialized, setInitialized] = useState(false);
+
+  const setActiveReportState = useCallback((report: SavedQuery | SystemReport | null) => {
+    setActiveReport(report);
+    setReportRef(report ? getReportRef(report) : null);
+  }, []);
 
   // Hydrate from URL on mount
   useEffect(() => {
     if (initialized) return;
     const fq = searchParams.get('fq');
+    const reportId = searchParams.get('reportId');
+    const reportKind = searchParams.get('reportKind');
+
     if (fq) {
       const decoded = decodeFilters(fq);
       setFilters(decoded);
+    }
+    if (reportId && (reportKind === 'saved' || reportKind === 'system')) {
+      setReportRef({ id: reportId, kind: reportKind });
     }
     setInitialized(true);
   }, [searchParams, initialized]);
@@ -41,18 +75,28 @@ export function useFilters(): UseFiltersReturn {
   // Sync filters to URL reactively (avoids calling router.replace during render/setState)
   useEffect(() => {
     if (!initialized) return;
-    const hasFilters = Object.keys(filters).length > 0;
-    if (hasFilters) {
-      const encoded = encodeFilters(filters);
-      router.replace(`/reports/invoices?fq=${encoded}`, { scroll: false });
-    } else {
-      router.replace('/reports/invoices', { scroll: false });
+    const nextParams = new URLSearchParams();
+
+    if (Object.keys(filters).length > 0) {
+      nextParams.set('fq', encodeFilters(filters));
     }
-  }, [filters, initialized, router]);
+
+    if (reportRef) {
+      nextParams.set('reportId', reportRef.id);
+      nextParams.set('reportKind', reportRef.kind);
+    }
+
+    const nextQuery = nextParams.toString();
+    const nextUrl = nextQuery ? `/reports/invoices?${nextQuery}` : '/reports/invoices';
+    router.replace(nextUrl, { scroll: false });
+  }, [filters, initialized, reportRef, router]);
 
   const setFilter = useCallback(
     (key: string, value: any) => {
       setFilters((prev) => ({ ...prev, [key]: value }));
+      if (isDateAccessor(key) && value && typeof value === 'object') {
+        setDateFieldsState((prev) => upsertFixedDateField(prev, key, value));
+      }
     },
     []
   );
@@ -64,48 +108,68 @@ export function useFilters(): UseFiltersReturn {
         delete next[key];
         return next;
       });
+      if (isDateAccessor(key)) {
+        setDateFieldsState((prev) => removeDateField(prev, key));
+      }
     },
     []
   );
 
   const clearFilters = useCallback(() => {
     setFilters({});
-    setDateFields([]);
+    setDateFieldsState([]);
+    setReportRef(null);
   }, []);
 
   const applyReport = useCallback(
     (report: SavedQuery | SystemReport) => {
-      setActiveReport(report);
+      setActiveReportState(report);
 
       if ('isSystem' in report && report.isSystem) {
         setFilters(report.query);
-        setDateFields([]);
+        setDateFieldsState([]);
       } else {
         const sq = report as SavedQuery;
-        const mergedFilters = { ...sq.query };
-
-        if (sq.dateFields && sq.dateFields.length > 0) {
-          for (const df of sq.dateFields) {
-            const range = resolveDateField(df);
-            mergedFilters[df.accessor] = range;
-          }
-          setDateFields(sq.dateFields);
-        } else {
-          setDateFields([]);
-        }
-
-        setFilters(mergedFilters);
+        setDateFieldsState(normalizeDateFields(sq.dateFields));
+        setFilters(materializeSavedQueryFilters(sq.query, sq.dateFields));
       }
     },
-    []
+    [setActiveReportState]
+  );
+
+  const hydrateReportContext = useCallback(
+    (report: SavedQuery | SystemReport) => {
+      setActiveReportState(report);
+
+      if ('isSystem' in report && report.isSystem) {
+        setDateFieldsState([]);
+      } else {
+        setDateFieldsState(normalizeDateFields((report as SavedQuery).dateFields));
+      }
+    },
+    [setActiveReportState]
   );
 
   // Determine if current filters differ from the active report's stored query
   const isDirty = (() => {
     if (!activeReport) return Object.keys(filters).length > 0;
-    const reportQuery = activeReport.query || {};
-    return JSON.stringify(filters) !== JSON.stringify(reportQuery);
+    if ('isSystem' in activeReport && activeReport.isSystem) {
+      return stableSerialize(filters) !== stableSerialize(activeReport.query || {});
+    }
+
+    const report = activeReport as SavedQuery;
+    return (
+      stableSerialize(buildSavedQueryPayload(filters, dateFields)) !==
+      stableSerialize({
+        query: report.query || {},
+        dateFields: normalizeDateFields(report.dateFields),
+      })
+    );
   })();
+
+  const setDateFields = useCallback((fields: DateFieldConfig[]) => {
+    setDateFieldsState(normalizeDateFields(fields));
+  }, []);
 
   return {
     filters,
@@ -113,8 +177,9 @@ export function useFilters(): UseFiltersReturn {
     removeFilter,
     clearFilters,
     applyReport,
+    hydrateReportContext,
     activeReport,
-    setActiveReport,
+    setActiveReport: setActiveReportState,
     isDirty,
     dateFields,
     setDateFields,

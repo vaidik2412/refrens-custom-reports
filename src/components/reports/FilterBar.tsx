@@ -124,7 +124,7 @@ function renderFilter(
           label={config.label}
           value={val}
           onChange={(v) => (v ? setFilter(config.key, v) : removeFilter(config.key))}
-          searchEndpoint={config.key === 'creator' ? '/api/clients/search' : '/api/clients/search'}
+          searchEndpoint="/api/clients/search"
           placeholder={config.placeholder}
         />
       );

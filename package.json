@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "seed": "node seedData.cjs",
+    "seed:defaults": "node seedDefaultReports.cjs",
     "seed:queries": "node setupSavedQueries.cjs",
+    "migrate:queries": "node migrateSavedQueries.cjs",
     "verify": "node verifyQueries.cjs"
   },
   "keywords": [],

@@ -1,5 +1,10 @@
-const { MongoClient, ObjectId } = require('mongodb');
+const { MongoClient } = require('mongodb');
 require('dotenv').config();
+
+const {
+  buildMongoQuery,
+  SAVED_QUERY_CONTRACT_VERSION,
+} = require('./savedQueryContract.cjs');
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -8,52 +13,178 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-// Emulate resolving dynamic dates on the backend
-function resolveDateRange(dateFieldConfig) {
-  if (dateFieldConfig.dateBehaviour === 'fixed') {
-    return {
-      $gte: new Date(dateFieldConfig.fixedDateRange.$gte),
-      $lte: new Date(dateFieldConfig.fixedDateRange.$lte)
-    };
+async function buildClientValueMap(db) {
+  const rows = await db
+    .collection('invoices')
+    .aggregate([
+      {
+        $match: {
+          client: { $ne: null },
+          'billedTo.name': { $ne: null },
+          isRemoved: { $ne: true },
+          isHardRemoved: { $ne: true },
+        },
+      },
+      {
+        $group: {
+          _id: '$client',
+          label: { $first: '$billedTo.name' },
+        },
+      },
+    ])
+    .toArray();
+
+  const labelsToIds = new Map();
+  const idsToLabels = new Map();
+
+  for (const row of rows) {
+    const id = String(row._id);
+    const label = row.label;
+    if (!label) continue;
+    idsToLabels.set(id, label);
+    const existing = labelsToIds.get(label) || [];
+    if (!existing.includes(id)) existing.push(id);
+    labelsToIds.set(label, existing);
   }
 
-  if (dateFieldConfig.dateBehaviour === 'dynamic') {
-    const now = new Date();
-    let startDate = new Date();
-    
-    // Simplistic emulation of dynamic dates based on the schema config
-    if (dateFieldConfig.dynamicPreset === 'custom' && dateFieldConfig.customUnit === 'weeks') {
-        startDate.setDate(now.getDate() - (dateFieldConfig.customNumber * 7));
-    } else if (dateFieldConfig.dynamicPreset === 'last_30_days') {
-        startDate.setDate(now.getDate() - 30);
-    }
-    
-    return {
-      $gte: startDate,
-      $lte: now
-    };
-  }
-  return {};
+  return { labelsToIds, idsToLabels };
 }
 
-// Compile a final MongoDB query payload from the Saved Query object
-function buildMongoQuery(savedQueryDef) {
-  // Base query (e.g., { billType: "INVOICE" })
-  const finalQuery = { ...savedQueryDef.query };
+async function runSavedQueryCheck(db, savedQuery, clientValueMap) {
+  const mongoQuery = buildMongoQuery(savedQuery.query, savedQuery.dateFields, {
+    clientValueMap,
+  });
 
-  // Append resolved date configurations
-  if (Array.isArray(savedQueryDef.dateFields)) {
-    savedQueryDef.dateFields.forEach(df => {
-      finalQuery[df.accessor] = resolveDateRange(df);
-    });
+  const targetCollection = savedQuery.serviceName || 'invoices';
+  const results = await db.collection(targetCollection).find(mongoQuery).limit(3).toArray();
+
+  console.log(`\n============================`);
+  console.log(`Executing Custom Report: "${savedQuery.displayName}"`);
+  console.log('============================\n');
+  console.log('Compiled MongoDB Query:');
+  console.log(JSON.stringify(mongoQuery, null, 2));
+  console.log(`\nResults Found: ${results.length}\n`);
+
+  results.forEach((res, index) => {
+    console.log(`Match ${index + 1}:`);
+    console.log(` - ID: ${res._id}`);
+    console.log(` - BillType: ${res.billType}`);
+    console.log(` - Invoice Number: ${res.invoiceNumber}`);
+    console.log(` - Status: ${res.status}`);
+    console.log(` - Invoice Date: ${res.invoiceDate}`);
+    console.log(` - Due Date: ${res.dueDate}`);
+    console.log(` - Total Amount: ${res.totals?.total}`);
+    console.log('----------------------------');
+  });
+
+  return results.length > 0;
+}
+
+async function runParityChecks(db) {
+  const checks = [
+    {
+      label: 'Seeded docs still using legacy balance.received field',
+      filter: { '_systemMeta.source': 'seed-script', 'balance.received': { $exists: true } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing balance.paid',
+      filter: { '_systemMeta.source': 'seed-script', 'balance.paid': { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing recurringInvoice.frequency',
+      filter: { '_systemMeta.source': 'seed-script', 'recurringInvoice.frequency': { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs with legacy spaced e-invoice status',
+      filter: { '_systemMeta.source': 'seed-script', einvoiceGeneratedStatus: 'NOT GENERATED' },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs with lowercase irn.irn key',
+      filter: { '_systemMeta.source': 'seed-script', 'irn.irn': { $exists: true } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing client object ids',
+      filter: { '_systemMeta.source': 'seed-script', client: { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing totalConversions',
+      filter: { '_systemMeta.source': 'seed-script', totalConversions: { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs still using flattened totalConversions.total',
+      filter: { '_systemMeta.source': 'seed-script', 'totalConversions.total': { $exists: true } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing shareId',
+      filter: { '_systemMeta.source': 'seed-script', shareId: { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing locale',
+      filter: { '_systemMeta.source': 'seed-script', locale: { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing paymentOptions',
+      filter: { '_systemMeta.source': 'seed-script', paymentOptions: { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing reminders',
+      filter: { '_systemMeta.source': 'seed-script', reminders: { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing vendorReminder',
+      filter: { '_systemMeta.source': 'seed-script', vendorReminder: { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing columns',
+      filter: { '_systemMeta.source': 'seed-script', columns: { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded docs missing customLabels',
+      filter: { '_systemMeta.source': 'seed-script', customLabels: { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded items missing group',
+      filter: { '_systemMeta.source': 'seed-script', 'items.group': { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded items missing hidden',
+      filter: { '_systemMeta.source': 'seed-script', 'items.hidden': { $exists: false } },
+      expected: 0,
+    },
+    {
+      label: 'Seeded items missing trackingMethod',
+      filter: { '_systemMeta.source': 'seed-script', 'items.trackingMethod': { $exists: false } },
+      expected: 0,
+    },
+  ];
+
+  let failures = 0;
+
+  console.log('\nParity Checks:');
+  for (const check of checks) {
+    const count = await db.collection('invoices').countDocuments(check.filter);
+    const pass = count === check.expected;
+    console.log(` - ${pass ? 'PASS' : 'FAIL'}: ${check.label} (${count})`);
+    if (!pass) failures += 1;
   }
 
-  // Enforce isolation
-  if (savedQueryDef.business) {
-    finalQuery.business = savedQueryDef.business;
-  }
-
-  return finalQuery;
+  return failures;
 }
 
 async function verifyQueries() {
@@ -64,50 +195,46 @@ async function verifyQueries() {
     console.log('Connected to MongoDB Atlas');
 
     const db = client.db('invoices');
-    
-    // 1. Fetch the saved report configuration
-    const savedQuery = await db.collection('savedQueries').findOne({ displayName: 'test custom 1' });
-    
-    if (!savedQuery) {
-        console.error("Saved query not found. Run setupSavedQueries.cjs first.");
-        return;
-    }
-    
-    console.log(`\n============================`);
-    console.log(`Executing Custom Report: "${savedQuery.displayName}"`);
-    console.log(`============================\n`);
+    const clientValueMap = await buildClientValueMap(db);
+    const savedQueries = await db.collection('savedQueries').find({
+      displayName: {
+        $in: [
+          'Sample Fixed Invoice Report',
+          'Sample Dynamic Due Report',
+          'Legacy Client Name Report',
+        ],
+      },
+    }).toArray();
 
-    // 2. Build the final query payload targeting the 'invoices' collection
-    const mongoQuery = buildMongoQuery(savedQuery);
-    
-    console.log("Compiled MongoDB Query:");
-    console.log(JSON.stringify(mongoQuery, null, 2));
-
-    // 3. Execute the payload against the mapped serviceName output
-    const targetCollection = savedQuery.serviceName || 'invoices';
-    const results = await db.collection(targetCollection).find(mongoQuery).toArray();
-
-    console.log(`\n============================`);
-    console.log(`Results Found: ${results.length}`);
-    console.log(`============================\n`);
-
-    if (results.length > 0) {
-        // Output a summarized glimpse of the results
-        results.forEach((res, i) => {
-           console.log(`Match ${i+1}:`);
-           console.log(` - ID: ${res._id}`);
-           console.log(` - BillType: ${res.billType}`);
-           console.log(` - Invoice Number: ${res.invoiceNumber}`);
-           console.log(` - Status: ${res.status}`);
-           console.log(` - Invoice Date: ${res.invoiceDate}`);
-           console.log(` - Due Date: ${res.dueDate}`);
-           console.log(` - Total Amount: ${res.totals?.total}`);
-           console.log(`----------------------------`);
-        });
+    if (savedQueries.length === 0) {
+      console.error('Saved query fixtures not found. Run setupSavedQueries.cjs first.');
+      return;
     }
 
+    let reportFailures = 0;
+    for (const savedQuery of savedQueries) {
+      const hasResults = await runSavedQueryCheck(db, savedQuery, clientValueMap);
+      const isUnmigratedLegacyFixture =
+        savedQuery._systemMeta?.source === 'setup-saved-queries-legacy' &&
+        savedQuery._migrationMeta?.version !== SAVED_QUERY_CONTRACT_VERSION;
+      if (!hasResults && !isUnmigratedLegacyFixture) {
+        reportFailures += 1;
+      }
+    }
+
+    const parityFailures = await runParityChecks(db);
+    const totalFailures = reportFailures + parityFailures;
+
+    if (totalFailures > 0) {
+      console.error(`\nVerification completed with ${totalFailures} failing check(s).`);
+      process.exitCode = 1;
+      return;
+    }
+
+    console.log('\nAll saved-query and parity checks passed.');
   } catch (err) {
     console.error('Error verifying query:', err);
+    process.exitCode = 1;
   } finally {
     await client.close();
   }

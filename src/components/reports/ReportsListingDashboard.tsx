@@ -6,7 +6,7 @@ import { useSavedQueries } from '@/hooks/useSavedQueries';
 import { SYSTEM_REPORTS, BILL_TYPE_OPTIONS } from '@/lib/constants';
 import Button from '@/components/ui/Button';
 import { encodeFilters } from '@/lib/url-encoding';
-import { resolveDateField } from '@/lib/date-utils';
+import { materializeSavedQueryFilters } from '@/lib/saved-query-contract';
 import type { SavedQuery, SystemReport } from '@/types';
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -134,22 +134,21 @@ export default function ReportsListingDashboard() {
   const handleRowClick = (row: ReportRow) => {
     const report = row.source;
     let filters: Record<string, any>;
+    const params = new URLSearchParams();
 
     if ('isSystem' in report && report.isSystem) {
       filters = { ...report.query };
+      params.set('reportId', report.id);
+      params.set('reportKind', 'system');
     } else {
       const sq = report as SavedQuery;
-      filters = { ...sq.query };
-      if (sq.dateFields && sq.dateFields.length > 0) {
-        for (const df of sq.dateFields) {
-          const range = resolveDateField(df);
-          filters[df.accessor] = range;
-        }
-      }
+      filters = materializeSavedQueryFilters(sq.query, sq.dateFields);
+      params.set('reportId', sq._id);
+      params.set('reportKind', 'saved');
     }
 
-    const encoded = encodeFilters(filters);
-    router.push(`/reports/invoices?fq=${encoded}`);
+    params.set('fq', encodeFilters(filters));
+    router.push(`/reports/invoices?${params.toString()}`);
   };
 
   const pageHeader = (

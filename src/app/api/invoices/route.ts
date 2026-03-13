@@ -3,21 +3,23 @@ import type { Sort } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { buildMongoQuery, parseQueryParams } from '@/lib/query-builder';
 
+function looksLikeObjectId(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9a-fA-F]{24}$/.test(value);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const db = await getDb();
     const { searchParams } = new URL(request.url);
     const { filter, sort, limit, skip } = parseQueryParams(searchParams);
 
-    // Remap UI filter keys to actual MongoDB field names
-    // "client" filter → matches billedTo.name via $in
-    if (filter.client) {
-      filter['billedTo.name'] = filter.client;
-      delete filter.client;
-    }
-    if (filter.creator) {
-      filter.addedBy = filter.creator;
-      delete filter.creator;
+    // Backward-compat: legacy saved queries stored client names instead of client ids.
+    if (filter.client?.$in && Array.isArray(filter.client.$in)) {
+      const allLegacyNames = filter.client.$in.every((value: unknown) => !looksLikeObjectId(value));
+      if (allLegacyNames) {
+        filter['billedTo.name'] = filter.client;
+        delete filter.client;
+      }
     }
 
     // Build the MongoDB query (converts dates, strips $inOptions, etc.)

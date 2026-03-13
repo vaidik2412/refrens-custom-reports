@@ -1,5 +1,6 @@
-const { MongoClient, ObjectId } = require('mongodb');
+const { MongoClient } = require('mongodb');
 require('dotenv').config();
+const { createSavedQueryDoc } = require('./savedQueryContract.cjs');
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -8,32 +9,17 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-// Same business/user IDs as setupSavedQueries.cjs and seedData.cjs
-const BUSINESS_ID = new ObjectId("66dfea2f0be47436d6ff2ca5");
-const USER_ID = new ObjectId("64c8da6b59797bccd235f770");
-
 // Helper to create a default report document
 const createReport = ({ displayName, description, nob, query, dateFields = [] }) => ({
-  _id: new ObjectId(),
-  isGlobal: false,
-  business: BUSINESS_ID,
-  addedBy: USER_ID,
-  displayInChatbot: false,
-  queryType: 'FEATHERS_SERVICE',
-  querySubType: 'FIND',
-  source: 'DASHBOARD',
-  serviceName: 'invoices',
-  query,
-  dateFields: dateFields.map(df => ({ ...df, _id: new ObjectId() })),
-  displayName,
-  description: description || '',
-  isArchived: false,
+  ...createSavedQueryDoc({
+    displayName,
+    description: description || '',
+    query,
+    dateFields,
+    systemSource: 'seed-default-reports',
+  }),
   isDefault: true,
   nob,
-  _systemMeta: { source: 'seed-default-reports' },
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  __v: 0
 });
 
 // ============================================================================
@@ -189,7 +175,7 @@ const defaultReports = [
     nob: 'TRADING_DISTRIBUTION',
     query: {
       billType: 'INVOICE',
-      einvoiceGeneratedStatus: 'NOT GENERATED',
+      einvoiceGeneratedStatus: 'NOT_GENERATED',
       status: { $nin: ['DRAFT'] },
       isExpenditure: false,
       isRemoved: false

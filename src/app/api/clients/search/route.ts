@@ -9,29 +9,30 @@ export async function GET(request: NextRequest) {
 
     const pipeline: any[] = [
       // Only non-removed invoices
-      { $match: { isRemoved: false, isHardRemoved: false } },
+      { $match: { isRemoved: false, isHardRemoved: false, client: { $ne: null } } },
       // Filter by billedTo.name if search query provided
       ...(q
         ? [{ $match: { 'billedTo.name': { $regex: q, $options: 'i' } } }]
         : []),
-      // Group by billedTo.name to get unique client names
+      // Group by client id to produce production-grade saved query filters
       {
         $group: {
-          _id: '$billedTo.name',
+          _id: '$client',
+          label: { $first: '$billedTo.name' },
         },
       },
       // Filter out nulls
       { $match: { _id: { $ne: null } } },
       // Sort alphabetically
-      { $sort: { _id: 1 } },
+      { $sort: { label: 1 } },
       // Limit results
       { $limit: 20 },
-      // Reshape for the $inOptions pattern — value = billedTo.name
+      // Reshape for the $inOptions pattern — value = client ObjectId, label = billedTo.name
       {
         $project: {
           _id: 0,
-          label: '$_id',
-          value: '$_id',
+          label: '$label',
+          value: { $toString: '$_id' },
         },
       },
     ];

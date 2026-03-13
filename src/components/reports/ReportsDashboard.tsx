@@ -1,10 +1,12 @@
 'use client';
 
-import { CSSProperties } from 'react';
+import { CSSProperties, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useFilters } from '@/hooks/useFilters';
 import { useSavedQueries } from '@/hooks/useSavedQueries';
 import { useInvoices } from '@/hooks/useInvoices';
+import { SYSTEM_REPORTS } from '@/lib/constants';
 import ReportSelectorDropdown from './ReportSelectorDropdown';
 import SaveReportButton from './SaveReportButton';
 import FilterBar from './FilterBar';
@@ -35,17 +37,18 @@ const pageHeaderStyle: CSSProperties = {
 };
 
 export default function ReportsDashboard() {
+  const searchParams = useSearchParams();
   const {
     filters,
     setFilter,
     removeFilter,
     clearFilters,
     applyReport,
+    hydrateReportContext,
     activeReport,
     setActiveReport,
     isDirty,
     dateFields,
-    setDateFields,
   } = useFilters();
 
   const {
@@ -65,6 +68,49 @@ export default function ReportsDashboard() {
     limit,
   } = useInvoices(filters);
 
+  useEffect(() => {
+    if (queriesLoading) return;
+
+    const reportId = searchParams.get('reportId');
+    const reportKind = searchParams.get('reportKind');
+
+    if (!reportId || (reportKind !== 'saved' && reportKind !== 'system')) {
+      return;
+    }
+
+    const activeId = activeReport
+      ? ('isSystem' in activeReport && activeReport.isSystem ? activeReport.id : activeReport._id)
+      : null;
+    const activeKind =
+      activeReport && 'isSystem' in activeReport && activeReport.isSystem ? 'system' : 'saved';
+
+    if (activeId === reportId && activeKind === reportKind) {
+      return;
+    }
+
+    const report =
+      reportKind === 'system'
+        ? SYSTEM_REPORTS.find((candidate) => candidate.id === reportId)
+        : savedQueries.find((candidate) => candidate._id === reportId);
+
+    if (!report) return;
+
+    if (Object.keys(filters).length === 0) {
+      applyReport(report);
+      return;
+    }
+
+    hydrateReportContext(report);
+  }, [
+    activeReport,
+    applyReport,
+    filters,
+    hydrateReportContext,
+    queriesLoading,
+    savedQueries,
+    searchParams,
+  ]);
+
   const handleSelectReport = (report: SavedQuery | SystemReport) => {
     applyReport(report);
   };
@@ -81,6 +127,10 @@ export default function ReportsDashboard() {
   };
 
   const handleReportCreated = (report: SavedQuery) => {
+    applyReport(report);
+  };
+
+  const handleReportUpdated = (report: SavedQuery) => {
     applyReport(report);
   };
 
@@ -117,12 +167,14 @@ export default function ReportsDashboard() {
         </div>
         <SaveReportButton
           filters={filters}
+          dateFields={dateFields}
           activeReport={activeReport}
           isDirty={isDirty}
           onCreateReport={createQuery}
           onUpdateReport={updateQuery}
           onDeleteReport={handleDeleteReport}
           onReportCreated={handleReportCreated}
+          onReportUpdated={handleReportUpdated}
         />
       </div>
 
