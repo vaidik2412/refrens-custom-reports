@@ -2,8 +2,10 @@
 
 import { CSSProperties, useMemo } from 'react';
 import ConditionRow from './ConditionRow';
+import ConditionGroup from './ConditionGroup';
+import LogicalOperatorToggle from './LogicalOperatorToggle';
 import Button from '@/components/ui/Button';
-import type { QueryCondition, QueryGroup } from '@/types/query-builder';
+import type { QueryCondition, QueryGroup, LogicalOperator } from '@/types/query-builder';
 
 interface ConditionListProps {
   group: QueryGroup;
@@ -40,11 +42,30 @@ const emptyStyle: CSSProperties = {
   fontSize: '13px',
 };
 
+const connectorStyle: CSSProperties = {
+  textAlign: 'center',
+  padding: '2px 0',
+  fontSize: '11px',
+  fontWeight: 600,
+  color: 'var(--color-cta-primary)',
+  letterSpacing: '0.5px',
+  textTransform: 'uppercase',
+};
+
+const actionsStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+};
+
 export default function ConditionList({ group, onUpdate, billType }: ConditionListProps) {
   const usedFields = useMemo(
     () => group.conditions.map((c) => c.field).filter(Boolean),
     [group.conditions]
   );
+
+  const groups = group.groups || [];
+  const totalItems = group.conditions.length + groups.length;
 
   const addCondition = () => {
     const newCondition: QueryCondition = {
@@ -56,6 +77,19 @@ export default function ConditionList({ group, onUpdate, billType }: ConditionLi
     onUpdate({
       ...group,
       conditions: [...group.conditions, newCondition],
+    });
+  };
+
+  const addGroup = () => {
+    const newGroup: QueryGroup = {
+      id: crypto.randomUUID(),
+      logicalOperator: 'AND',
+      conditions: [],
+      groups: [],
+    };
+    onUpdate({
+      ...group,
+      groups: [...groups, newGroup],
     });
   };
 
@@ -75,31 +109,84 @@ export default function ConditionList({ group, onUpdate, billType }: ConditionLi
     });
   };
 
+  const updateSubGroup = (id: string, updatedGroup: QueryGroup) => {
+    onUpdate({
+      ...group,
+      groups: groups.map((g) => (g.id === id ? updatedGroup : g)),
+    });
+  };
+
+  const removeSubGroup = (id: string) => {
+    onUpdate({
+      ...group,
+      groups: groups.filter((g) => g.id !== id),
+    });
+  };
+
+  const toggleRootOperator = (op: LogicalOperator) => {
+    onUpdate({ ...group, logicalOperator: op });
+  };
+
+  // Build interleaved list: conditions first, then groups, with connector labels between
+  const items: Array<{ type: 'condition'; condition: QueryCondition } | { type: 'group'; group: QueryGroup }> = [
+    ...group.conditions.map((c) => ({ type: 'condition' as const, condition: c })),
+    ...groups.map((g) => ({ type: 'group' as const, group: g })),
+  ];
+
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <span style={titleStyle}>
-          Filters{group.conditions.length > 0 ? ` (${group.conditions.length})` : ''}
-        </span>
-        <Button variant="ghost" size="sm" onClick={addCondition}>
-          + Add filter
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={titleStyle}>
+            Filters{totalItems > 0 ? ` (${totalItems})` : ''}
+          </span>
+          {totalItems > 1 && (
+            <LogicalOperatorToggle
+              value={group.logicalOperator}
+              onChange={toggleRootOperator}
+            />
+          )}
+        </div>
+        <div style={actionsStyle}>
+          <Button variant="ghost" size="sm" onClick={addCondition}>
+            + Add filter
+          </Button>
+          <Button variant="ghost" size="sm" onClick={addGroup}>
+            + Add group
+          </Button>
+        </div>
       </div>
 
-      {group.conditions.length === 0 ? (
+      {totalItems === 0 ? (
         <div style={emptyStyle}>
-          No filters added yet. Click &ldquo;+ Add filter&rdquo; to start building your query.
+          No filters added yet. Click &ldquo;+ Add filter&rdquo; to start building your query,
+          or &ldquo;+ Add group&rdquo; to create a group of conditions.
         </div>
       ) : (
-        group.conditions.map((condition) => (
-          <ConditionRow
-            key={condition.id}
-            condition={condition}
-            onUpdate={updateCondition}
-            onRemove={removeCondition}
-            usedFields={usedFields}
-            billType={billType}
-          />
+        items.map((item, index) => (
+          <div key={item.type === 'condition' ? item.condition.id : item.group.id}>
+            {index > 0 && (
+              <div style={connectorStyle}>
+                {group.logicalOperator}
+              </div>
+            )}
+            {item.type === 'condition' ? (
+              <ConditionRow
+                condition={item.condition}
+                onUpdate={updateCondition}
+                onRemove={removeCondition}
+                usedFields={usedFields}
+                billType={billType}
+              />
+            ) : (
+              <ConditionGroup
+                group={item.group}
+                onUpdate={(updated) => updateSubGroup(item.group.id, updated)}
+                onRemove={() => removeSubGroup(item.group.id)}
+                billType={billType}
+              />
+            )}
+          </div>
         ))
       )}
     </div>

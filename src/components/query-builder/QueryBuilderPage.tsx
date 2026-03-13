@@ -99,18 +99,21 @@ function createEmptyGroup(): QueryGroup {
     id: crypto.randomUUID(),
     logicalOperator: 'AND',
     conditions: [],
+    groups: [],
   };
 }
 
+function isValidCondition(c: QueryCondition): boolean {
+  if (!c.field) return false;
+  if (c.value?.dynamic === true && c.value?.preset) return true;
+  if (c.value === undefined || c.value === null || c.value === '') return false;
+  if (Array.isArray(c.value) && c.value.length === 0) return false;
+  return true;
+}
+
 function hasValidConditions(group: QueryGroup): boolean {
-  return group.conditions.some((c) => {
-    if (!c.field) return false;
-    // Dynamic date values are always valid if they have a preset
-    if (c.value?.dynamic === true && c.value?.preset) return true;
-    if (c.value === undefined || c.value === null || c.value === '') return false;
-    if (Array.isArray(c.value) && c.value.length === 0) return false;
-    return true;
-  });
+  if (group.conditions.some(isValidCondition)) return true;
+  return (group.groups || []).some((g) => hasValidConditions(g));
 }
 
 // ── Component ───────────────────────────────────────────────────────
@@ -135,13 +138,19 @@ export default function QueryBuilderPage() {
 
   const handleBillTypeChange = useCallback(
     (newBillType: string) => {
-      if (group.conditions.length > 0 && billType !== null) {
+      const subGroups = group.groups || [];
+      const totalConditions = group.conditions.length + subGroups.reduce((sum, g) => sum + g.conditions.length, 0);
+      if (totalConditions > 0 && billType !== null) {
         const newFieldKeys = new Set(
           getFieldsForBillType(newBillType).map((f) => f.key)
         );
-        const hasIncompatible = group.conditions.some(
-          (c) => c.field && !newFieldKeys.has(c.field)
-        );
+
+        const hasIncompatibleCondition = (conditions: QueryCondition[]) =>
+          conditions.some((c) => c.field && !newFieldKeys.has(c.field));
+
+        const hasIncompatible =
+          hasIncompatibleCondition(group.conditions) ||
+          subGroups.some((g) => hasIncompatibleCondition(g.conditions));
 
         if (hasIncompatible) {
           const confirmed = window.confirm(
@@ -149,11 +158,15 @@ export default function QueryBuilderPage() {
           );
           if (!confirmed) return;
 
+          const filterConditions = (conditions: QueryCondition[]) =>
+            conditions.filter((c) => !c.field || newFieldKeys.has(c.field));
+
           setGroup({
             ...group,
-            conditions: group.conditions.filter(
-              (c) => !c.field || newFieldKeys.has(c.field)
-            ),
+            conditions: filterConditions(group.conditions),
+            groups: subGroups
+              .map((g) => ({ ...g, conditions: filterConditions(g.conditions) }))
+              .filter((g) => g.conditions.length > 0),
           });
         }
       }
@@ -179,11 +192,16 @@ export default function QueryBuilderPage() {
       dateFields: DateFieldConfig[];
       query: Record<string, any>;
     }) => {
-      // Extract dynamic date conditions into dateFields
+      // Extract dynamic date conditions into dateFields (from all levels)
       const dateFields: DateFieldConfig[] = [...payload.dateFields];
       const query = { ...payload.query };
 
-      for (const c of group.conditions) {
+      const allConditions = [
+        ...group.conditions,
+        ...(group.groups || []).flatMap((g) => g.conditions),
+      ];
+
+      for (const c of allConditions) {
         if (c.value?.dynamic === true && c.value?.preset) {
           const entry = getFieldEntry(c.field);
           const accessor = entry?.mongoField || c.field;
@@ -213,6 +231,7 @@ export default function QueryBuilderPage() {
         ...payload,
         dateFields,
         query,
+        queryGroupTree: group,
       });
       // Build redirect URL using the full preview query (which includes resolved dates)
       // so the initial results match what the user just previewed.
