@@ -32,13 +32,28 @@ const clearAllStyle: CSSProperties = {
 // Keys that are internal / not user-facing filters
 const HIDDEN_KEYS = ['isRemoved', 'isHardRemoved'];
 
+function hasVisibleFilterValue(value: unknown): boolean {
+  if (value === null || value === undefined || value === '') return false;
+  if (Array.isArray(value)) return value.length > 0;
+
+  if (typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>).some((nestedValue) => {
+      if (nestedValue === null || nestedValue === undefined || nestedValue === '') return false;
+      if (Array.isArray(nestedValue)) return nestedValue.length > 0;
+      return true;
+    });
+  }
+
+  return true;
+}
+
 export default function AppliedFiltersPills({
   filters,
   removeFilter,
   clearFilters,
 }: AppliedFiltersPillsProps) {
   const entries = Object.entries(filters).filter(
-    ([key]) => !HIDDEN_KEYS.includes(key)
+    ([key, value]) => !HIDDEN_KEYS.includes(key) && hasVisibleFilterValue(value)
   );
 
   if (entries.length === 0) return null;

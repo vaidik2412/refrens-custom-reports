@@ -54,8 +54,9 @@ export default function ConditionRow({ condition, onUpdate, onRemove, usedFields
 
   const handleOperatorChange = (operator: Operator) => {
     const entry = getFieldEntry(condition.field);
-    const wasMulti = condition.operator === '$in';
-    const isMulti = operator === '$in';
+    const multiOperators: Operator[] = ['$in', '$all'];
+    const wasMulti = multiOperators.includes(condition.operator);
+    const isMulti = multiOperators.includes(operator);
     const isDateField = entry?.fieldType === 'date';
     const dateOps = ['$between', '$gte', '$lte'];
     const wasDateOp = dateOps.includes(condition.operator);

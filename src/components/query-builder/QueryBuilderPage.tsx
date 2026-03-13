@@ -13,7 +13,7 @@ import { conditionsToMongoQuery } from '@/lib/conditions-to-mongo';
 import { getFieldEntry, getFieldsForBillType } from '@/lib/field-registry';
 import { encodeFilters } from '@/lib/url-encoding';
 import type { QueryGroup, QueryCondition } from '@/types/query-builder';
-import type { DateFieldConfig } from '@/types';
+import type { DateFieldConfig, SortParam } from '@/types';
 
 // ── Styles ──────────────────────────────────────────────────────────
 
@@ -127,7 +127,8 @@ export default function QueryBuilderPage() {
 
   // Preview
   const [previewQuery, setPreviewQuery] = useState<Record<string, any> | null>(null);
-  const { data, total, loading, page, setPage, limit } = useInvoices(previewQuery || {});
+  const [previewSort, setPreviewSort] = useState<SortParam | undefined>(undefined);
+  const { data, total, loading, page, setPage, limit } = useInvoices(previewQuery || {}, previewSort);
 
   // Save modal
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -288,6 +289,7 @@ export default function QueryBuilderPage() {
             page={page}
             setPage={setPage}
             limit={limit}
+            onSortChange={setPreviewSort}
           />
         </div>
       )}

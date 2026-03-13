@@ -1,16 +1,32 @@
 'use client';
 
-import { CSSProperties } from 'react';
-import { BILL_TYPE_OPTIONS } from '@/lib/constants';
+import { CSSProperties, useState, useEffect, useRef, useCallback } from 'react';
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  type SortingState,
+  type VisibilityState,
+  type ColumnOrderState,
+} from '@tanstack/react-table';
+import type { InvoiceRow, SortParam } from '@/types';
+import { allColumns } from './columns';
+import ColumnVisibilityDropdown from './ColumnVisibilityDropdown';
+
+// ── Props ──────────────────────────────────────────────────────────
 
 interface InvoiceTableProps {
-  data: any[];
+  data: InvoiceRow[];
   total: number;
   loading: boolean;
   page: number;
   setPage: (page: number) => void;
   limit: number;
+  onSortChange?: (sort: SortParam | undefined) => void;
+  defaultColumnVisibility?: Record<string, boolean>;
 }
+
+// ── Styles ─────────────────────────────────────────────────────────
 
 const tableContainerStyle: CSSProperties = {
   overflowX: 'auto',
@@ -20,10 +36,10 @@ const tableContainerStyle: CSSProperties = {
 };
 
 const tableStyle: CSSProperties = {
-  width: '100%',
   borderCollapse: 'collapse',
   fontSize: '13px',
   letterSpacing: '-0.25px',
+  tableLayout: 'fixed',
 };
 
 const thStyle: CSSProperties = {
@@ -39,6 +55,9 @@ const thStyle: CSSProperties = {
   background: 'var(--color-bg-alt)',
   position: 'sticky',
   top: 0,
+  cursor: 'pointer',
+  userSelect: 'none',
+  overflow: 'hidden',
 };
 
 const tdStyle: CSSProperties = {
@@ -46,6 +65,8 @@ const tdStyle: CSSProperties = {
   borderBottom: '1px solid var(--color-border)',
   color: 'var(--color-text-primary)',
   whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
 };
 
 const paginationStyle: CSSProperties = {
@@ -66,56 +87,18 @@ const pageBtnStyle: CSSProperties = {
   letterSpacing: '-0.25px',
 };
 
-const statusColors: Record<string, { bg: string; text: string }> = {
-  PAID: { bg: '#ECFDF5', text: '#059669' },
-  UNPAID: { bg: '#FEF3C7', text: '#D97706' },
-  OVERDUE: { bg: '#FEE2E2', text: '#DC2626' },
-  PARTIALLY_PAID: { bg: '#EFF6FF', text: '#2563EB' },
-  DRAFT: { bg: 'var(--color-bg-alt)', text: 'var(--color-text-secondary)' },
+const resizeHandleStyle: CSSProperties = {
+  position: 'absolute',
+  right: 0,
+  top: 0,
+  height: '100%',
+  width: '4px',
+  cursor: 'col-resize',
+  userSelect: 'none',
+  touchAction: 'none',
 };
 
-function StatusBadge({ status }: { status: string }) {
-  const colors = statusColors[status] || statusColors.DRAFT;
-  return (
-    <span
-      style={{
-        display: 'inline-block',
-        padding: '2px 8px',
-        borderRadius: '4px',
-        fontSize: '11px',
-        fontWeight: 600,
-        background: colors.bg,
-        color: colors.text,
-        letterSpacing: '0.3px',
-      }}
-    >
-      {status.replace(/_/g, ' ')}
-    </span>
-  );
-}
-
-function formatCurrency(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  } catch {
-    return `${currency} ${amount?.toFixed(2) || '0'}`;
-  }
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '—';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
+// ── Component ──────────────────────────────────────────────────────
 
 export default function InvoiceTable({
   data,
@@ -124,7 +107,72 @@ export default function InvoiceTable({
   page,
   setPage,
   limit,
+  onSortChange,
+  defaultColumnVisibility,
 }: InvoiceTableProps) {
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'invoiceDate', desc: true },
+  ]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    defaultColumnVisibility ?? {}
+  );
+  const [columnOrder, setColumnOrder] = useState<ColumnOrderState>(
+    allColumns.map((c) => c.id!)
+  );
+
+  const draggedCol = useRef<string | null>(null);
+
+  const table = useReactTable({
+    data,
+    columns: allColumns,
+    state: { sorting, columnVisibility, columnOrder },
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    onColumnOrderChange: setColumnOrder,
+    getCoreRowModel: getCoreRowModel(),
+    manualSorting: true,
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+  });
+
+  // Propagate sort to parent
+  useEffect(() => {
+    if (!onSortChange) return;
+    if (sorting.length > 0) {
+      const col = allColumns.find((c) => c.id === sorting[0].id);
+      const field = (col?.meta as any)?.sortField || sorting[0].id;
+      onSortChange({ field, direction: sorting[0].desc ? 'desc' : 'asc' });
+    } else {
+      onSortChange(undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sorting]);
+
+  // ── Drag handlers for column reorder ───────────────────────────
+  const onDragStart = useCallback((colId: string) => {
+    draggedCol.current = colId;
+  }, []);
+
+  const onDrop = useCallback(
+    (targetId: string) => {
+      const fromId = draggedCol.current;
+      if (!fromId || fromId === targetId) return;
+      setColumnOrder((prev) => {
+        const newOrder = [...prev];
+        const fromIdx = newOrder.indexOf(fromId);
+        const toIdx = newOrder.indexOf(targetId);
+        if (fromIdx === -1 || toIdx === -1) return prev;
+        newOrder.splice(fromIdx, 1);
+        newOrder.splice(toIdx, 0, fromId);
+        return newOrder;
+      });
+      draggedCol.current = null;
+    },
+    []
+  );
+
+  // ── Render helpers ─────────────────────────────────────────────
+
   const totalPages = Math.ceil(total / limit);
   const from = page * limit + 1;
   const to = Math.min((page + 1) * limit, total);
@@ -155,8 +203,17 @@ export default function InvoiceTable({
           background: '#FFFFFF',
         }}
       >
-        <div style={{ fontSize: '32px', marginBottom: '8px', opacity: 0.3 }}>&#x1F4C4;</div>
-        <div style={{ fontSize: '15px', fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: '4px' }}>
+        <div style={{ fontSize: '32px', marginBottom: '8px', opacity: 0.3 }}>
+          &#x1F4C4;
+        </div>
+        <div
+          style={{
+            fontSize: '15px',
+            fontWeight: 500,
+            color: 'var(--color-text-primary)',
+            marginBottom: '4px',
+          }}
+        >
           No invoices found
         </div>
         <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
@@ -166,65 +223,144 @@ export default function InvoiceTable({
     );
   }
 
+  const headerGroups = table.getHeaderGroups();
+  const rows = table.getRowModel().rows;
+
   return (
     <div>
+      {/* Toolbar */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          marginBottom: '8px',
+        }}
+      >
+        <ColumnVisibilityDropdown table={table} />
+      </div>
+
+      {/* Table */}
       <div style={tableContainerStyle}>
-        <table style={tableStyle}>
+        <table
+          style={{
+            ...tableStyle,
+            width: table.getCenterTotalSize(),
+            minWidth: '100%',
+          }}
+        >
           <thead>
-            <tr>
-              <th style={thStyle}>Invoice #</th>
-              <th style={thStyle}>Type</th>
-              <th style={thStyle}>Billed To</th>
-              <th style={thStyle}>Date</th>
-              <th style={thStyle}>Due Date</th>
-              <th style={thStyle}>Amount</th>
-              <th style={thStyle}>Balance</th>
-              <th style={thStyle}>Status</th>
-              <th style={thStyle}>Currency</th>
-            </tr>
+            {headerGroups.map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  const meta = header.column.columnDef.meta as any;
+                  const align = meta?.align || 'left';
+                  const isSorted = header.column.getIsSorted();
+
+                  return (
+                    <th
+                      key={header.id}
+                      style={{
+                        ...thStyle,
+                        width: header.getSize(),
+                        textAlign: align,
+                        position: 'relative',
+                        cursor: header.column.getCanSort()
+                          ? 'pointer'
+                          : 'default',
+                      }}
+                      onClick={header.column.getToggleSortingHandler()}
+                      draggable
+                      onDragStart={() => onDragStart(header.column.id)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => onDrop(header.column.id)}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}>
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              opacity: isSorted ? 1 : 0.3,
+                              color: isSorted
+                                ? 'var(--color-cta-primary)'
+                                : 'var(--color-text-secondary)',
+                            }}
+                          >
+                            {isSorted === 'asc'
+                              ? '\u2191'
+                              : isSorted === 'desc'
+                                ? '\u2193'
+                                : '\u2195'}
+                          </span>
+                        )}
+                      </span>
+                      {/* Resize handle */}
+                      <div
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        style={{
+                          ...resizeHandleStyle,
+                          background: header.column.getIsResizing()
+                            ? 'var(--color-cta-primary)'
+                            : 'transparent',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
           </thead>
           <tbody>
-            {data.map((inv, idx) => (
+            {rows.map((row, idx) => (
               <tr
-                key={inv._id || idx}
+                key={row.id}
                 style={{
-                  background: idx % 2 === 0 ? '#FFFFFF' : 'var(--color-bg-alt)',
+                  background:
+                    idx % 2 === 0 ? '#FFFFFF' : 'var(--color-bg-alt)',
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = '#F5F3FF';
+                  (e.currentTarget as HTMLElement).style.background =
+                    '#F5F3FF';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.background =
                     idx % 2 === 0 ? '#FFFFFF' : 'var(--color-bg-alt)';
                 }}
               >
-                <td style={{ ...tdStyle, fontWeight: 500 }}>
-                  {inv.invoiceNumber || inv.documentNumber || '—'}
-                </td>
-                <td style={tdStyle}>
-                  <span style={{ fontSize: '12px' }}>
-                    {BILL_TYPE_OPTIONS.find((o) => o.value === inv.billType)?.label || inv.billType || '—'}
-                  </span>
-                </td>
-                <td style={{ ...tdStyle, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {inv.billedTo?.name || '—'}
-                </td>
-                <td style={tdStyle}>{formatDate(inv.invoiceDate)}</td>
-                <td style={tdStyle}>{formatDate(inv.dueDate)}</td>
-                <td style={{ ...tdStyle, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
-                  {formatCurrency(inv.totals?.total || 0, inv.currency || 'INR')}
-                </td>
-                <td style={{ ...tdStyle, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
-                  {formatCurrency(inv.balance?.due || 0, inv.currency || 'INR')}
-                </td>
-                <td style={tdStyle}>
-                  <StatusBadge status={inv.status || 'DRAFT'} />
-                </td>
-                <td style={tdStyle}>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                    {inv.currency || '—'}
-                  </span>
-                </td>
+                {row.getVisibleCells().map((cell) => {
+                  const meta = cell.column.columnDef.meta as any;
+                  const align = meta?.align || 'left';
+                  const cellStyleOverride = meta?.cellStyle || {};
+                  const isAmount = align === 'right';
+
+                  return (
+                    <td
+                      key={cell.id}
+                      style={{
+                        ...tdStyle,
+                        width: cell.column.getSize(),
+                        textAlign: align,
+                        ...(isAmount
+                          ? { fontVariantNumeric: 'tabular-nums' }
+                          : {}),
+                        ...(cell.column.id === 'invoiceNumber'
+                          ? { fontWeight: 500 }
+                          : {}),
+                        ...cellStyleOverride,
+                      }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
@@ -233,12 +369,20 @@ export default function InvoiceTable({
 
       {/* Pagination */}
       <div style={paginationStyle}>
-        <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
-          {total > 0 ? `Showing ${from}–${to} of ${total}` : 'No results'}
+        <span
+          style={{
+            fontSize: '13px',
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          {total > 0
+            ? `Showing ${from}\u2013${to} of ${total}`
+            : 'No results'}
           {loading && ' (loading...)'}
         </span>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
+            type="button"
             style={{
               ...pageBtnStyle,
               opacity: page === 0 ? 0.4 : 1,
@@ -261,6 +405,7 @@ export default function InvoiceTable({
             Page {page + 1} of {totalPages || 1}
           </span>
           <button
+            type="button"
             style={{
               ...pageBtnStyle,
               opacity: page >= totalPages - 1 ? 0.4 : 1,

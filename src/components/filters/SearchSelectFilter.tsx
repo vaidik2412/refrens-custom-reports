@@ -1,7 +1,7 @@
 'use client';
 
-import { CSSProperties, useState, useRef, useEffect, useCallback } from 'react';
-import { useDebounce } from '@/hooks/useDebounce';
+import { CSSProperties, useState, useRef, useEffect } from 'react';
+import { useAsyncSuggestions } from '@/hooks/useAsyncSuggestions';
 import type { ClientOption } from '@/types';
 
 interface SearchSelectFilterProps {
@@ -22,7 +22,7 @@ const triggerStyle: CSSProperties = {
   borderRadius: 'var(--radius-input)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   cursor: 'pointer',
   whiteSpace: 'nowrap',
   letterSpacing: '-0.25px',
@@ -34,7 +34,7 @@ const menuStyle: CSSProperties = {
   position: 'absolute',
   top: 'calc(100% + 4px)',
   left: 0,
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-input)',
   boxShadow: 'var(--shadow-l1)',
@@ -69,10 +69,8 @@ export default function SearchSelectFilter({
 }: SearchSelectFilterProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<ClientOption[]>([]);
-  const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const debouncedQuery = useDebounce(query, 300);
+  const { results, loading } = useAsyncSuggestions<ClientOption>(searchEndpoint, open, query);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -81,24 +79,6 @@ export default function SearchSelectFilter({
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
-
-  const search = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${searchEndpoint}?q=${encodeURIComponent(debouncedQuery)}`);
-      if (res.ok) {
-        setResults(await res.json());
-      }
-    } catch (err) {
-      console.error('Search failed:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchEndpoint, debouncedQuery]);
-
-  useEffect(() => {
-    if (open) search();
-  }, [open, search]);
 
   const selectedIds = value?.$in || [];
   const selectedOptions = value?.$inOptions || [];
@@ -132,6 +112,7 @@ export default function SearchSelectFilter({
         {label}
       </div>
       <button
+        type="button"
         style={{
           ...triggerStyle,
           color: displayText ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
@@ -151,7 +132,7 @@ export default function SearchSelectFilter({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Type to search..."
+              placeholder="Search or browse..."
               style={{
                 width: '100%', padding: '6px 8px',
                 border: '1px solid var(--color-border)', borderRadius: '6px',
@@ -162,11 +143,17 @@ export default function SearchSelectFilter({
           </div>
           {selectedIds.length > 0 && (
             <button
+              type="button"
               style={{ ...optStyle, color: 'var(--color-text-secondary)', fontStyle: 'italic', fontSize: '12px' }}
               onClick={() => { onChange(undefined); }}
             >
               Clear all
             </button>
+          )}
+          {!loading && query.trim() === '' && results.length > 0 && (
+            <div style={{ padding: '8px 12px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Suggested clients
+            </div>
           )}
           {loading && (
             <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
@@ -175,20 +162,21 @@ export default function SearchSelectFilter({
           )}
           {!loading && results.length === 0 && (
             <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-              No results
+              {query.trim() ? 'No results' : 'No suggestions'}
             </div>
           )}
           {results.map((opt) => (
             <button
+              type="button"
               key={opt.value}
               style={{
                 ...optStyle,
                 background: selectedIds.includes(opt.value) ? 'var(--color-bg-alt)' : 'none',
               }}
               onClick={() => toggleOption(opt)}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = 'var(--color-bg-alt)'; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)'; }}
               onMouseLeave={(e) => {
-                (e.target as HTMLElement).style.background =
+                (e.currentTarget as HTMLElement).style.background =
                   selectedIds.includes(opt.value) ? 'var(--color-bg-alt)' : 'none';
               }}
             >

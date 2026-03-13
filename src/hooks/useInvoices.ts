@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useDebounce } from './useDebounce';
-import type { InvoiceListResponse } from '@/types';
+import type { InvoiceListResponse, InvoiceRow, SortParam } from '@/types';
 
-export function useInvoices(filters: Record<string, any>) {
-  const [data, setData] = useState<any[]>([]);
+export function useInvoices(filters: Record<string, any>, sort?: SortParam) {
+  const [data, setData] = useState<InvoiceRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -19,7 +19,9 @@ export function useInvoices(filters: Record<string, any>) {
       const params = new URLSearchParams();
       params.set('$limit', String(limit));
       params.set('$skip', String(page * limit));
-      params.set('$sort[invoiceDate]', '-1');
+      const sortField = sort?.field || 'invoiceDate';
+      const sortDir = sort?.direction === 'asc' ? '1' : '-1';
+      params.set(`$sort[${sortField}]`, sortDir);
 
       // Serialize filters to bracket notation
       for (const [key, value] of Object.entries(debouncedFilters)) {
@@ -54,16 +56,16 @@ export function useInvoices(filters: Record<string, any>) {
     } finally {
       setLoading(false);
     }
-  }, [debouncedFilters, page]);
+  }, [debouncedFilters, page, sort?.field, sort?.direction]);
 
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
 
-  // Reset to page 0 when filters change
+  // Reset to page 0 when filters or sort change
   useEffect(() => {
     setPage(0);
-  }, [debouncedFilters]);
+  }, [debouncedFilters, sort?.field, sort?.direction]);
 
   return { data, total, loading, page, setPage, limit, refetch: fetchInvoices };
 }

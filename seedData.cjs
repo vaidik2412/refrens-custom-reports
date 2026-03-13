@@ -1588,6 +1588,10 @@ async function runSeed() {
     
     console.log(`Clearing existing documents (if any) to ensure fresh seed...`);
     await col.deleteMany({ '_systemMeta.source': 'seed-script' });
+    await col.createIndex(
+      { isRemoved: 1, isHardRemoved: 1, tags: 1 },
+      { name: 'invoice_tag_search_idx' }
+    );
 
     console.log(`Inserting ${normalizedDocuments.length} sample invoices into the "invoices" collection with canonical production-parity shape...`);
     const result = await col.insertMany(normalizedDocuments);
