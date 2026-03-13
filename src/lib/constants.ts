@@ -68,6 +68,12 @@ export const E_INVOICE_STATUS_OPTIONS = [
   { label: 'Cancelled', value: 'CANCELLED' },
 ];
 
+export const INVOICE_ACCEPTANCE_OPTIONS = [
+  { label: 'Accepted', value: 'ACCEPTED' },
+  { label: 'Waiting', value: 'WAITING' },
+  { label: 'Rejected', value: 'REJECTED' },
+];
+
 export const SOURCE_OPTIONS = [
   { label: 'Dashboard', value: 'DASHBOARD' },
   { label: 'Bulk Upload', value: 'BULK_UPLOAD' },
@@ -221,10 +227,36 @@ export const SECONDARY_FILTERS: FilterFieldConfig[] = [
     primary: false,
   },
   {
+    key: 'balance.paid',
+    label: 'Paid Amount',
+    type: 'number-range',
+    primary: false,
+  },
+  {
+    key: 'lastPaymentDate',
+    label: 'Last Payment Date',
+    type: 'date-range',
+    primary: false,
+  },
+  {
+    key: 'hasPayments',
+    label: 'Has Payments',
+    type: 'boolean',
+    primary: false,
+  },
+  {
     key: 'adjustedCredit',
     label: 'Adjusted via Credit Note',
     type: 'boolean',
     primary: false,
+  },
+  {
+    key: 'invoiceAccepted',
+    label: 'Acceptance Status',
+    type: 'select',
+    options: INVOICE_ACCEPTANCE_OPTIONS,
+    primary: false,
+    placeholder: 'All Statuses',
   },
   {
     key: 'recurringInvoice.frequency',
@@ -237,6 +269,12 @@ export const SECONDARY_FILTERS: FilterFieldConfig[] = [
   {
     key: 'hasLinkedInvoice',
     label: 'Linked Invoice',
+    type: 'boolean',
+    primary: false,
+  },
+  {
+    key: 'bookKeepingSyncStatus.isSynced',
+    label: 'Accounting Synced',
     type: 'boolean',
     primary: false,
   },

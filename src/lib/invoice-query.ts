@@ -24,7 +24,7 @@ export const INVOICE_LIST_PROJECTION = {
   'recurringInvoice.frequency': 1,
 } as const;
 
-const DERIVED_INVOICE_FILTER_KEYS = ['hasLinkedInvoice', 'adjustedCredit'] as const;
+const DERIVED_INVOICE_FILTER_KEYS = ['hasLinkedInvoice', 'adjustedCredit', 'hasPayments'] as const;
 
 type DerivedInvoiceFilterKey = (typeof DERIVED_INVOICE_FILTER_KEYS)[number];
 type DerivedInvoiceFilters = Partial<Record<DerivedInvoiceFilterKey, boolean>>;
@@ -99,6 +99,28 @@ function buildAdjustedCreditClause(value: boolean | undefined): Record<string, a
   return {
     $expr: {
       $eq: [activeCreditClaimCount, 0],
+    },
+  };
+}
+
+function buildHasPaymentsClause(value: boolean | undefined): Record<string, any> | null {
+  if (value === undefined) return null;
+
+  const activePaymentCount = {
+    $size: {
+      $filter: {
+        input: { $ifNull: ['$payments', []] },
+        as: 'payment',
+        cond: {
+          $ne: ['$$payment.isRemoved', true],
+        },
+      },
+    },
+  };
+
+  return {
+    $expr: {
+      [value ? '$gt' : '$eq']: [activePaymentCount, 0],
     },
   };
 }
@@ -252,7 +274,8 @@ export function buildInvoiceListQueryPlan({
 
   const baseMatch = mergeMatchClauses(
     mongoFilter,
-    buildAdjustedCreditClause(derivedFilters.adjustedCredit)
+    buildAdjustedCreditClause(derivedFilters.adjustedCredit),
+    buildHasPaymentsClause(derivedFilters.hasPayments)
   );
 
   if (derivedFilters.hasLinkedInvoice === undefined) {
