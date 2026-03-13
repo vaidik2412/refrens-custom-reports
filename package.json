@@ -18,6 +18,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
     "dotenv": "^17.3.1",
     "gst-states": "^2.1.1",
     "mongodb": "^6.12.0",

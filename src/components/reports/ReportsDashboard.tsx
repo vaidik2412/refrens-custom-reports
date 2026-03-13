@@ -1,18 +1,19 @@
 'use client';
 
-import { CSSProperties, useEffect, useRef } from 'react';
+import { CSSProperties, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useFilters } from '@/hooks/useFilters';
 import { useSavedQueries } from '@/hooks/useSavedQueries';
 import { useInvoices } from '@/hooks/useInvoices';
 import { SYSTEM_REPORTS } from '@/lib/constants';
+import { compactVisibility } from './columns';
 import ReportSelectorDropdown from './ReportSelectorDropdown';
 import SaveReportButton from './SaveReportButton';
 import FilterBar from './FilterBar';
 import AppliedFiltersPills from './AppliedFiltersPills';
 import InvoiceTable from './InvoiceTable';
-import type { SavedQuery, SystemReport } from '@/types';
+import type { SavedQuery, SystemReport, SortParam } from '@/types';
 
 const headerStyle: CSSProperties = {
   display: 'flex',
@@ -61,6 +62,8 @@ export default function ReportsDashboard() {
     deleteQuery,
   } = useSavedQueries();
 
+  const [sort, setSort] = useState<SortParam | undefined>(undefined);
+
   const {
     data: invoices,
     total,
@@ -68,7 +71,7 @@ export default function ReportsDashboard() {
     page,
     setPage,
     limit,
-  } = useInvoices(filters);
+  } = useInvoices(filters, sort);
 
   useEffect(() => {
     if (queriesLoading) return;
@@ -267,6 +270,8 @@ export default function ReportsDashboard() {
         page={page}
         setPage={setPage}
         limit={limit}
+        onSortChange={setSort}
+        defaultColumnVisibility={compactVisibility}
       />
     </div>
   );

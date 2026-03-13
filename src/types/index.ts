@@ -91,8 +91,37 @@ export interface FilterFieldConfig {
   searchEndpoint?: string;
 }
 
+export interface InvoiceRow {
+  _id: string;
+  invoiceNumber?: string;
+  documentNumber?: string;
+  billType?: string;
+  billedTo?: { name?: string };
+  billedBy?: { name?: string };
+  invoiceDate?: string;
+  dueDate?: string;
+  totals?: { total?: number; subTotal?: number };
+  balance?: { due?: number };
+  status?: string;
+  currency?: string;
+  taxType?: string;
+  einvoiceGeneratedStatus?: string;
+  source?: string;
+  isExpenditure?: boolean;
+  igst?: boolean;
+  reverseCharge?: boolean;
+  placeOfSupply?: string;
+  recurringInvoice?: { frequency?: string };
+  tags?: string[];
+}
+
+export interface SortParam {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+
 export interface InvoiceListResponse {
-  data: any[];
+  data: InvoiceRow[];
   total: number;
   limit: number;
   skip: number;
