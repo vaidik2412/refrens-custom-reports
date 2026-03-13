@@ -111,6 +111,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     operators: NUMBER_OPERATORS,
     defaultOperator: '$gte',
     category: 'financial',
+    billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER'],
   },
   {
     key: 'lastPaymentDate',
@@ -119,6 +120,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     operators: DATE_OPERATORS,
     defaultOperator: '$between',
     category: 'financial',
+    billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER'],
   },
   {
     key: 'hasPayments',
@@ -127,6 +129,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     operators: BOOLEAN_OPERATORS,
     defaultOperator: '$eq',
     category: 'financial',
+    billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER'],
   },
   {
     key: 'adjustedCredit',
