@@ -12,11 +12,13 @@ import {
 // ── Operator sets by field type (all index-friendly) ────────────────
 
 const ENUM_OPERATORS: Operator[] = ['$eq', '$in'];
+const ENUM_MULTI_OPERATORS: Operator[] = ['$in'];
 const STRING_OPERATORS: Operator[] = ['$eq', '$regex'];
 const NUMBER_OPERATORS: Operator[] = ['$eq', '$gt', '$gte', '$lt', '$lte'];
 const DATE_OPERATORS: Operator[] = ['$between', '$gte', '$lte'];
 const BOOLEAN_OPERATORS: Operator[] = ['$eq'];
 const SEARCH_OPERATORS: Operator[] = ['$in'];
+const ARRAY_MATCH_OPERATORS: Operator[] = ['$in', '$all'];
 
 // ── Field Registry ──────────────────────────────────────────────────
 
@@ -144,8 +146,8 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     key: 'einvoiceGeneratedStatus',
     label: 'E-Invoice Status',
     fieldType: 'enum',
-    operators: ENUM_OPERATORS,
-    defaultOperator: '$eq',
+    operators: ENUM_MULTI_OPERATORS,
+    defaultOperator: '$in',
     options: E_INVOICE_STATUS_OPTIONS,
     category: 'tax',
     billTypes: ['INVOICE', 'CREDITNOTE'],
@@ -173,9 +175,10 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     key: 'tags',
     label: 'Tags',
     fieldType: 'multi-enum',
-    operators: ['$in'] as Operator[],
-    defaultOperator: '$in',
+    operators: ARRAY_MATCH_OPERATORS,
+    defaultOperator: '$all',
     category: 'metadata',
+    searchEndpoint: '/api/tags/search',
   },
   {
     key: 'recurringInvoice.frequency',
@@ -221,6 +224,7 @@ export const OPERATOR_LABELS: Record<string, string> = {
   $lt: 'less than',
   $lte: 'at most',
   $in: 'is any of',
+  $all: 'has all of',
   $regex: 'contains',
   $between: 'is between',
 };

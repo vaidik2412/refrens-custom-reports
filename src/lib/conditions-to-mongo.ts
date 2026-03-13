@@ -24,8 +24,12 @@ export function conditionsToMongoQuery(
       continue;
     }
 
-    // For $in, skip empty arrays
-    if (condition.operator === '$in' && Array.isArray(condition.value) && condition.value.length === 0) {
+    // For array operators, skip empty arrays
+    if (
+      (condition.operator === '$in' || condition.operator === '$all') &&
+      Array.isArray(condition.value) &&
+      condition.value.length === 0
+    ) {
       continue;
     }
 
@@ -119,7 +123,7 @@ export function conditionsToMongoQuery(
       }
       query[mongoKey][op] = op === '$gte' ? resolved.$gte : resolved.$lte;
     } else {
-      // $gt, $gte, $lt, $lte, $in — merge into compound operator object
+      // $gt, $gte, $lt, $lte, $in, $all — merge into compound operator object
       if (typeof query[mongoKey] !== 'object' || query[mongoKey] === null) {
         query[mongoKey] = {};
       }

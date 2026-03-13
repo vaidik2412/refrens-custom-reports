@@ -1,6 +1,7 @@
 'use client';
 
 import { CSSProperties, useEffect, useRef, useState } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { getFieldEntry } from '@/lib/field-registry';
 import RadioGroup from '@/components/ui/RadioGroup';
 import Pill from '@/components/ui/Pill';
@@ -42,6 +43,49 @@ const focusHandlers = {
     e.target.style.boxShadow = 'none';
   },
 };
+
+type AsyncOption = { label: string; value: string };
+
+function useAsyncSuggestions(endpoint: string | undefined, open: boolean, query: string) {
+  const debouncedQuery = useDebounce(query, 300);
+  const [results, setResults] = useState<AsyncOption[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !endpoint) return;
+
+    let cancelled = false;
+
+    async function loadResults() {
+      setLoading(true);
+      try {
+        const res = await fetch(`${endpoint}?q=${encodeURIComponent(debouncedQuery)}`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (!cancelled) {
+          setResults(Array.isArray(data) ? data : []);
+        }
+      } catch {
+        if (!cancelled) {
+          setResults([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadResults();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedQuery, endpoint, open]);
+
+  return { results, loading };
+}
 
 // ── Multi-select dropdown (for $in on enums) ────────────────────────
 
@@ -163,11 +207,10 @@ function SearchSelectInput({
   onChange: (v: string[]) => void;
 }) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Array<{ label: string; value: string }>>([]);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [knownOptions, setKnownOptions] = useState<Record<string, string>>({});
   const ref = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const { results, loading } = useAsyncSuggestions(endpoint, open, query);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -180,34 +223,24 @@ function SearchSelectInput({
   }, []);
 
   useEffect(() => {
-    if (query.length < 2) {
-      setResults([]);
+    if (results.length === 0) {
       return;
     }
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setResults(data);
-        }
-      } catch {
-        // silent
-      } finally {
-        setLoading(false);
+    setKnownOptions((prev) => {
+      const next = { ...prev };
+      for (const option of results) {
+        next[option.value] = option.label;
       }
-    }, 300);
-    return () => clearTimeout(timerRef.current);
-  }, [query, endpoint]);
+      return next;
+    });
+  }, [results]);
 
-  const addValue = (val: string) => {
-    if (!value.includes(val)) {
-      onChange([...value, val]);
+  const addValue = (option: AsyncOption) => {
+    if (!value.includes(option.value)) {
+      onChange([...value, option.value]);
     }
+    setKnownOptions((prev) => ({ ...prev, [option.value]: option.label }));
     setQuery('');
-    setResults([]);
   };
 
   const removeValue = (val: string) => {
@@ -218,7 +251,7 @@ function SearchSelectInput({
     <div ref={ref} style={{ position: 'relative', display: 'inline-flex', flexDirection: 'column', gap: '4px' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
         {value.map((v) => (
-          <Pill key={v} label={v} onRemove={() => removeValue(v)} variant="brand" />
+          <Pill key={v} label={knownOptions[v] || v} onRemove={() => removeValue(v)} variant="brand" />
         ))}
         <input
           type="text"
@@ -228,11 +261,11 @@ function SearchSelectInput({
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder={value.length > 0 ? 'Add more...' : 'Search...'}
+          placeholder={value.length > 0 ? 'Search or browse more...' : 'Search or browse clients...'}
           style={{ ...inputStyle, minWidth: '120px', flex: '1 1 auto' }}
         />
       </div>
-      {open && (query.length >= 2 || results.length > 0) && (
+      {open && (
         <div
           style={{
             position: 'absolute',
@@ -250,14 +283,19 @@ function SearchSelectInput({
             minWidth: '200px',
           }}
         >
-          {loading && (
-            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-              Searching...
+          {query.trim() === '' && !loading && results.length > 0 && (
+            <div style={{ padding: '8px 12px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Suggested clients
             </div>
           )}
-          {!loading && results.length === 0 && query.length >= 2 && (
+          {loading && (
             <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-              No results
+              Loading...
+            </div>
+          )}
+          {!loading && results.length === 0 && (
+            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+              {query.trim() ? 'No results' : 'No suggestions'}
             </div>
           )}
           {results.map((r) => (
@@ -283,7 +321,7 @@ function SearchSelectInput({
                   (e.currentTarget as HTMLElement).style.background = 'none';
                 }
               }}
-              onClick={() => addValue(r.value)}
+              onClick={() => addValue(r)}
             >
               {r.label}
             </button>
@@ -299,39 +337,150 @@ function SearchSelectInput({
 function TagInput({
   value,
   onChange,
+  endpoint,
 }: {
   value: string[];
   onChange: (v: string[]) => void;
+  endpoint?: string;
 }) {
   const [input, setInput] = useState('');
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { results, loading } = useAsyncSuggestions(endpoint, open, input);
 
-  const addTag = () => {
-    const tag = input.trim();
-    if (tag && !value.includes(tag)) {
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const addTag = (rawTag: string = input) => {
+    const tag = rawTag.trim();
+    if (tag && !value.some((existing) => existing.toLowerCase() === tag.toLowerCase())) {
       onChange([...value, tag]);
     }
     setInput('');
   };
 
+  const pendingTag = input.trim();
+  const canAddPendingTag =
+    pendingTag.length > 0 &&
+    !value.some((existing) => existing.toLowerCase() === pendingTag.toLowerCase()) &&
+    !results.some((result) => result.value.toLowerCase() === pendingTag.toLowerCase());
+
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-      {value.map((v) => (
-        <Pill key={v} label={v} onRemove={() => onChange(value.filter((t) => t !== v))} variant="brand" />
-      ))}
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            addTag();
-          }
-        }}
-        onBlur={addTag}
-        placeholder={value.length > 0 ? 'Add tag...' : 'Type and press Enter...'}
-        style={{ ...inputStyle, minWidth: '120px', flex: '1 1 auto' }}
-      />
+    <div ref={ref} style={{ position: 'relative', display: 'inline-flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+        {value.map((v) => (
+          <Pill key={v} label={v} onRemove={() => onChange(value.filter((t) => t !== v))} variant="brand" />
+        ))}
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => {
+            setInput(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ',') {
+              e.preventDefault();
+              addTag();
+            }
+          }}
+          placeholder={value.length > 0 ? 'Search or add more tags...' : 'Search or add tags...'}
+          style={{ ...inputStyle, minWidth: '120px', flex: '1 1 auto' }}
+        />
+      </div>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            background: '#FFFFFF',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-input)',
+            boxShadow: 'var(--shadow-l1)',
+            zIndex: 40,
+            maxHeight: '220px',
+            overflowY: 'auto',
+            padding: '4px 0',
+            minWidth: '220px',
+          }}
+        >
+          {input.trim() === '' && !loading && results.length > 0 && (
+            <div style={{ padding: '8px 12px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Suggested tags
+            </div>
+          )}
+          {canAddPendingTag && (
+            <button
+              type="button"
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '6px 12px',
+                fontSize: '13px',
+                border: 'none',
+                background: 'none',
+                textAlign: 'left',
+                cursor: 'pointer',
+                fontStyle: 'italic',
+                letterSpacing: '-0.25px',
+              }}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => addTag(pendingTag)}
+            >
+              Add &ldquo;{pendingTag}&rdquo;
+            </button>
+          )}
+          {loading && (
+            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+              Loading...
+            </div>
+          )}
+          {!loading && results.length === 0 && !canAddPendingTag && (
+            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+              {input.trim() ? 'No tags found' : 'No suggestions'}
+            </div>
+          )}
+          {results.map((result) => (
+            <button
+              key={result.value}
+              type="button"
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '6px 12px',
+                fontSize: '13px',
+                border: 'none',
+                background: value.includes(result.value) ? 'var(--color-bg-alt)' : 'none',
+                textAlign: 'left',
+                cursor: 'pointer',
+                letterSpacing: '-0.25px',
+              }}
+              onMouseDown={(e) => e.preventDefault()}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)';
+              }}
+              onMouseLeave={(e) => {
+                if (!value.includes(result.value)) {
+                  (e.currentTarget as HTMLElement).style.background = 'none';
+                }
+              }}
+              onClick={() => addTag(result.value)}
+            >
+              {result.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -763,7 +912,7 @@ export default function ValueInput({ fieldKey, operator, value, onChange }: Valu
   // Multi-enum (tags) → freeform tag input
   if (fieldType === 'multi-enum') {
     const arrVal = Array.isArray(value) ? value : [];
-    return <TagInput value={arrVal} onChange={onChange} />;
+    return <TagInput value={arrVal} onChange={onChange} endpoint={searchEndpoint} />;
   }
 
   // Number fields → number input

@@ -1,6 +1,7 @@
 'use client';
 
 import { CSSProperties, useState, useRef, useEffect } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface MultiSelectFilterProps {
   label: string;
@@ -9,6 +10,10 @@ interface MultiSelectFilterProps {
   onChange: (values: string[]) => void;
   placeholder?: string;
   allowFreeText?: boolean;
+  searchEndpoint?: string;
+  operator?: '$in' | '$all';
+  operatorOptions?: Array<{ label: string; value: '$in' | '$all' }>;
+  onOperatorChange?: (operator: '$in' | '$all') => void;
 }
 
 const triggerStyle: CSSProperties = {
@@ -64,10 +69,17 @@ export default function MultiSelectFilter({
   onChange,
   placeholder,
   allowFreeText = false,
+  searchEndpoint,
+  operator = '$in',
+  operatorOptions,
+  onOperatorChange,
 }: MultiSelectFilterProps) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
+  const [remoteOptions, setRemoteOptions] = useState<Array<{ label: string; value: string }>>([]);
+  const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const debouncedInput = useDebounce(input, 300);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -76,6 +88,37 @@ export default function MultiSelectFilter({
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  useEffect(() => {
+    if (!open || !searchEndpoint) return;
+
+    let cancelled = false;
+
+    async function loadOptions() {
+      setLoading(true);
+      try {
+        const res = await fetch(`${searchEndpoint}?q=${encodeURIComponent(debouncedInput)}`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (!cancelled) {
+          setRemoteOptions(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch options:', err);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedInput, open, searchEndpoint]);
 
   const toggle = (v: string) => {
     if (value.includes(v)) {
@@ -93,9 +136,23 @@ export default function MultiSelectFilter({
     setInput('');
   };
 
-  const filteredOptions = options.filter((o) =>
-    o.label.toLowerCase().includes(input.toLowerCase())
-  );
+  const filteredOptions = searchEndpoint
+    ? remoteOptions
+    : options.filter((o) => o.label.toLowerCase().includes(input.toLowerCase()));
+
+  const displayedOptions = filteredOptions.reduce<Array<{ label: string; value: string }>>((acc, option) => {
+    if (!acc.find((existing) => existing.value === option.value)) {
+      acc.push(option);
+    }
+    return acc;
+  }, []);
+
+  const pendingFreeText = input.trim();
+  const hasPendingFreeText =
+    allowFreeText &&
+    pendingFreeText.length > 0 &&
+    !value.some((item) => item.toLowerCase() === pendingFreeText.toLowerCase()) &&
+    !displayedOptions.some((item) => item.value.toLowerCase() === pendingFreeText.toLowerCase());
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
@@ -103,6 +160,7 @@ export default function MultiSelectFilter({
         {label}
       </div>
       <button
+        type="button"
         style={{
           ...triggerStyle,
           color: value.length > 0 ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
@@ -115,6 +173,29 @@ export default function MultiSelectFilter({
       </button>
       {open && (
         <div style={menuStyle}>
+          {operatorOptions && operatorOptions.length > 1 && onOperatorChange && (
+            <div style={{ padding: '8px 8px 0' }}>
+              <select
+                value={operator}
+                onChange={(e) => onOperatorChange(e.target.value as '$in' | '$all')}
+                style={{
+                  width: '100%',
+                  padding: '6px 8px',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  background: '#FFFFFF',
+                  outline: 'none',
+                }}
+              >
+                {operatorOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div style={{ padding: '4px 8px' }}>
             <input
               type="text"
@@ -123,7 +204,13 @@ export default function MultiSelectFilter({
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && allowFreeText) addFreeText();
               }}
-              placeholder={allowFreeText ? 'Type to add...' : 'Filter...'}
+              placeholder={
+                allowFreeText
+                  ? 'Search or add...'
+                  : searchEndpoint
+                    ? 'Search or browse...'
+                    : 'Filter...'
+              }
               style={{
                 width: '100%',
                 padding: '6px 8px',
@@ -135,16 +222,37 @@ export default function MultiSelectFilter({
               autoFocus
             />
           </div>
+          {hasPendingFreeText && (
+            <button
+              type="button"
+              style={{ ...checkItemStyle, fontStyle: 'italic' }}
+              onClick={addFreeText}
+            >
+              Add &ldquo;{pendingFreeText}&rdquo;
+            </button>
+          )}
           {value.length > 0 && (
             <button
+              type="button"
               style={{ ...checkItemStyle, color: 'var(--color-text-secondary)', fontStyle: 'italic', fontSize: '12px' }}
               onClick={() => onChange([])}
             >
               Clear all
             </button>
           )}
-          {filteredOptions.map((opt) => (
+          {loading && (
+            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+              Loading...
+            </div>
+          )}
+          {!loading && displayedOptions.length === 0 && !hasPendingFreeText && (
+            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+              No results
+            </div>
+          )}
+          {displayedOptions.map((opt) => (
             <button
+              type="button"
               key={opt.value}
               style={checkItemStyle}
               onClick={() => toggle(opt.value)}
@@ -165,9 +273,10 @@ export default function MultiSelectFilter({
           ))}
           {/* Show free-text values that aren't in options */}
           {value
-            .filter((v) => !options.find((o) => o.value === v))
+            .filter((v) => !displayedOptions.find((o) => o.value === v))
             .map((v) => (
               <button
+                type="button"
                 key={v}
                 style={checkItemStyle}
                 onClick={() => toggle(v)}

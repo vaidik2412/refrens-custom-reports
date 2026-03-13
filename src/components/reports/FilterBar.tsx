@@ -74,18 +74,39 @@ function renderFilter(
         />
       );
 
-    case 'multi-select':
+    case 'multi-select': {
+      const operator =
+        typeof val === 'object' && val !== null
+          ? ('$all' in val ? '$all' : '$in' in val ? '$in' : config.operator || '$in')
+          : config.operator || '$in';
+      const operatorOptions =
+        config.key === 'tags'
+          ? [
+              { label: 'Any of', value: '$in' as const },
+              { label: 'All of', value: '$all' as const },
+            ]
+          : undefined;
       return (
         <MultiSelectFilter
           key={config.key}
           label={config.label}
-          value={val?.$in || val || []}
+          value={val?.[operator] || val || []}
           options={config.options}
-          onChange={(v) => (v.length > 0 ? setFilter(config.key, { $in: v }) : removeFilter(config.key))}
+          onChange={(v) => (v.length > 0 ? setFilter(config.key, { [operator]: v }) : removeFilter(config.key))}
           placeholder={config.placeholder}
           allowFreeText={config.key === 'tags'}
+          searchEndpoint={config.searchEndpoint}
+          operator={operator}
+          operatorOptions={operatorOptions}
+          onOperatorChange={(nextOperator) => {
+            const selectedValues = val?.$all || val?.$in || [];
+            if (selectedValues.length > 0) {
+              setFilter(config.key, { [nextOperator]: selectedValues });
+            }
+          }}
         />
       );
+    }
 
     case 'date-range':
       return (
@@ -124,7 +145,7 @@ function renderFilter(
           label={config.label}
           value={val}
           onChange={(v) => (v ? setFilter(config.key, v) : removeFilter(config.key))}
-          searchEndpoint="/api/clients/search"
+          searchEndpoint={config.searchEndpoint || '/api/clients/search'}
           placeholder={config.placeholder}
         />
       );

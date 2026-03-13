@@ -288,6 +288,7 @@ export default function QueryBuilderPage() {
             page={page}
             setPage={setPage}
             limit={limit}
+            showAllColumns
           />
         </div>
       )}

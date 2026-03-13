@@ -132,6 +132,7 @@ export default function SearchSelectFilter({
         {label}
       </div>
       <button
+        type="button"
         style={{
           ...triggerStyle,
           color: displayText ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
@@ -151,7 +152,7 @@ export default function SearchSelectFilter({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Type to search..."
+              placeholder="Search or browse..."
               style={{
                 width: '100%', padding: '6px 8px',
                 border: '1px solid var(--color-border)', borderRadius: '6px',
@@ -162,11 +163,17 @@ export default function SearchSelectFilter({
           </div>
           {selectedIds.length > 0 && (
             <button
+              type="button"
               style={{ ...optStyle, color: 'var(--color-text-secondary)', fontStyle: 'italic', fontSize: '12px' }}
               onClick={() => { onChange(undefined); }}
             >
               Clear all
             </button>
+          )}
+          {!loading && query.trim() === '' && results.length > 0 && (
+            <div style={{ padding: '8px 12px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Suggested clients
+            </div>
           )}
           {loading && (
             <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
@@ -180,6 +187,7 @@ export default function SearchSelectFilter({
           )}
           {results.map((opt) => (
             <button
+              type="button"
               key={opt.value}
               style={{
                 ...optStyle,

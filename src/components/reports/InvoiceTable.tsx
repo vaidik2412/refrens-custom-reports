@@ -10,6 +10,7 @@ interface InvoiceTableProps {
   page: number;
   setPage: (page: number) => void;
   limit: number;
+  showAllColumns?: boolean;
 }
 
 const tableContainerStyle: CSSProperties = {
@@ -117,6 +118,18 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function formatBoolean(value: unknown): string {
+  if (value === true) return 'Yes';
+  if (value === false) return 'No';
+  return '—';
+}
+
+function formatValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—';
+  if (Array.isArray(value)) return value.length > 0 ? value.join(', ') : '—';
+  return String(value);
+}
+
 export default function InvoiceTable({
   data,
   total,
@@ -124,6 +137,7 @@ export default function InvoiceTable({
   page,
   setPage,
   limit,
+  showAllColumns = false,
 }: InvoiceTableProps) {
   const totalPages = Math.ceil(total / limit);
   const from = page * limit + 1;
@@ -175,12 +189,23 @@ export default function InvoiceTable({
               <th style={thStyle}>Invoice #</th>
               <th style={thStyle}>Type</th>
               <th style={thStyle}>Billed To</th>
+              {showAllColumns && <th style={thStyle}>Billed By</th>}
               <th style={thStyle}>Date</th>
               <th style={thStyle}>Due Date</th>
               <th style={thStyle}>Amount</th>
+              {showAllColumns && <th style={thStyle}>Subtotal</th>}
               <th style={thStyle}>Balance</th>
               <th style={thStyle}>Status</th>
               <th style={thStyle}>Currency</th>
+              {showAllColumns && <th style={thStyle}>Tax Type</th>}
+              {showAllColumns && <th style={thStyle}>E-Invoice</th>}
+              {showAllColumns && <th style={thStyle}>Source</th>}
+              {showAllColumns && <th style={thStyle}>Expenditure</th>}
+              {showAllColumns && <th style={thStyle}>IGST</th>}
+              {showAllColumns && <th style={thStyle}>Reverse Charge</th>}
+              {showAllColumns && <th style={thStyle}>Place of Supply</th>}
+              {showAllColumns && <th style={thStyle}>Recurring</th>}
+              {showAllColumns && <th style={thStyle}>Tags</th>}
             </tr>
           </thead>
           <tbody>
@@ -209,11 +234,21 @@ export default function InvoiceTable({
                 <td style={{ ...tdStyle, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {inv.billedTo?.name || '—'}
                 </td>
+                {showAllColumns && (
+                  <td style={{ ...tdStyle, maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {inv.billedBy?.name || '—'}
+                  </td>
+                )}
                 <td style={tdStyle}>{formatDate(inv.invoiceDate)}</td>
                 <td style={tdStyle}>{formatDate(inv.dueDate)}</td>
                 <td style={{ ...tdStyle, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
                   {formatCurrency(inv.totals?.total || 0, inv.currency || 'INR')}
                 </td>
+                {showAllColumns && (
+                  <td style={{ ...tdStyle, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
+                    {formatCurrency(inv.totals?.subTotal || 0, inv.currency || 'INR')}
+                  </td>
+                )}
                 <td style={{ ...tdStyle, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
                   {formatCurrency(inv.balance?.due || 0, inv.currency || 'INR')}
                 </td>
@@ -225,6 +260,19 @@ export default function InvoiceTable({
                     {inv.currency || '—'}
                   </span>
                 </td>
+                {showAllColumns && <td style={tdStyle}>{formatValue(inv.taxType)}</td>}
+                {showAllColumns && <td style={tdStyle}>{formatValue(inv.einvoiceGeneratedStatus)}</td>}
+                {showAllColumns && <td style={tdStyle}>{formatValue(inv.source)}</td>}
+                {showAllColumns && <td style={tdStyle}>{formatBoolean(inv.isExpenditure)}</td>}
+                {showAllColumns && <td style={tdStyle}>{formatBoolean(inv.igst)}</td>}
+                {showAllColumns && <td style={tdStyle}>{formatBoolean(inv.reverseCharge)}</td>}
+                {showAllColumns && <td style={tdStyle}>{formatValue(inv.placeOfSupply)}</td>}
+                {showAllColumns && <td style={tdStyle}>{formatValue(inv.recurringInvoice?.frequency)}</td>}
+                {showAllColumns && (
+                  <td style={{ ...tdStyle, maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {formatValue(inv.tags)}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

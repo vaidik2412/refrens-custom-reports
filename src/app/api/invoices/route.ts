@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
           invoiceDate: 1,
           dueDate: 1,
           currency: 1,
+          taxType: 1,
           'totals.total': 1,
           'totals.subTotal': 1,
           'balance.due': 1,
@@ -62,6 +63,10 @@ export async function GET(request: NextRequest) {
           isExpenditure: 1,
           source: 1,
           igst: 1,
+          reverseCharge: 1,
+          placeOfSupply: 1,
+          einvoiceGeneratedStatus: 1,
+          'recurringInvoice.frequency': 1,
         })
         .toArray(),
       db.collection('invoices').countDocuments(mongoFilter),

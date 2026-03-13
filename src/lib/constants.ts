@@ -63,6 +63,7 @@ export const TAX_TYPE_OPTIONS = [
 
 export const E_INVOICE_STATUS_OPTIONS = [
   { label: 'Not Generated', value: 'NOT_GENERATED' },
+  { label: 'Failed', value: 'FAILED' },
   { label: 'Generated', value: 'GENERATED' },
   { label: 'Cancelled', value: 'CANCELLED' },
 ];
@@ -134,6 +135,7 @@ export const PRIMARY_FILTERS: FilterFieldConfig[] = [
     type: 'search-select',
     primary: true,
     placeholder: 'Search client...',
+    searchEndpoint: '/api/clients/search',
   },
   {
     key: 'currency',
@@ -163,8 +165,9 @@ export const SECONDARY_FILTERS: FilterFieldConfig[] = [
   {
     key: 'einvoiceGeneratedStatus',
     label: 'E-Invoice Status',
-    type: 'select',
+    type: 'multi-select',
     options: E_INVOICE_STATUS_OPTIONS,
+    operator: '$in',
     primary: false,
     placeholder: 'All Statuses',
   },
@@ -186,8 +189,10 @@ export const SECONDARY_FILTERS: FilterFieldConfig[] = [
     key: 'tags',
     label: 'Tags',
     type: 'multi-select',
+    operator: '$all',
     primary: false,
-    placeholder: 'Search tags...',
+    placeholder: 'Browse or add tags...',
+    searchEndpoint: '/api/tags/search',
   },
   {
     key: 'reverseCharge',
@@ -269,6 +274,7 @@ export function formatFilterValue(key: string, value: any): string {
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     if (typeof value === 'object' && value !== null) {
       if (value.$in && Array.isArray(value.$in)) return value.$in.join(', ');
+      if (value.$all && Array.isArray(value.$all)) return `All of: ${value.$all.join(', ')}`;
       if (value.$nin && Array.isArray(value.$nin)) return `Not: ${value.$nin.join(', ')}`;
       if (value.$ne !== undefined) return `≠ ${value.$ne}`;
       const parts: string[] = [];
@@ -334,8 +340,15 @@ export function formatFilterValue(key: string, value: any): string {
     return value.$inOptions.map((o: any) => o.label).join(', ');
   }
 
-  if (config.type === 'multi-select' && typeof value === 'object' && value.$in) {
-    return value.$in.join(', ');
+  if (config.type === 'multi-select' && typeof value === 'object' && value !== null) {
+    const arrayValue = value.$all || value.$in;
+    if (Array.isArray(arrayValue)) {
+      const labels = arrayValue.map((item: string) => {
+        const opt = config.options?.find((candidate) => candidate.value === item);
+        return opt?.label || item;
+      });
+      return value.$all ? `All of: ${labels.join(', ')}` : labels.join(', ');
+    }
   }
 
   return String(value);
