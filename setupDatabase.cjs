@@ -32,6 +32,10 @@ async function setupDatabase() {
     console.log('Creating "invoices" collection base on schema...');
     await Invoice.createCollection();
     await Invoice.syncIndexes();
+    await Invoice.collection.createIndex(
+      { isRemoved: 1, isHardRemoved: 1, tags: 1 },
+      { name: 'invoice_tag_search_idx' }
+    );
 
     console.log('Successfully created the "invoices" collection matching the schema!');
   } catch (error) {

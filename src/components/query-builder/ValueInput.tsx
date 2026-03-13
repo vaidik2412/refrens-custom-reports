@@ -1,7 +1,7 @@
 'use client';
 
 import { CSSProperties, useEffect, useRef, useState } from 'react';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useAsyncSuggestions } from '@/hooks/useAsyncSuggestions';
 import { getFieldEntry } from '@/lib/field-registry';
 import RadioGroup from '@/components/ui/RadioGroup';
 import Pill from '@/components/ui/Pill';
@@ -29,7 +29,7 @@ const inputStyle: CSSProperties = {
 
 const selectStyle: CSSProperties = {
   ...inputStyle,
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   cursor: 'pointer',
 };
 
@@ -45,47 +45,6 @@ const focusHandlers = {
 };
 
 type AsyncOption = { label: string; value: string };
-
-function useAsyncSuggestions(endpoint: string | undefined, open: boolean, query: string) {
-  const debouncedQuery = useDebounce(query, 300);
-  const [results, setResults] = useState<AsyncOption[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!open || !endpoint) return;
-
-    let cancelled = false;
-
-    async function loadResults() {
-      setLoading(true);
-      try {
-        const res = await fetch(`${endpoint}?q=${encodeURIComponent(debouncedQuery)}`);
-        if (!res.ok) return;
-
-        const data = await res.json();
-        if (!cancelled) {
-          setResults(Array.isArray(data) ? data : []);
-        }
-      } catch {
-        if (!cancelled) {
-          setResults([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadResults();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedQuery, endpoint, open]);
-
-  return { results, loading };
-}
 
 // ── Multi-select dropdown (for $in on enums) ────────────────────────
 
@@ -150,7 +109,7 @@ function MultiSelectDropdown({
             position: 'absolute',
             top: 'calc(100% + 4px)',
             left: 0,
-            background: '#FFFFFF',
+            background: 'var(--color-bg-card)',
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-input)',
             boxShadow: 'var(--shadow-l1)',
@@ -210,7 +169,7 @@ function SearchSelectInput({
   const [open, setOpen] = useState(false);
   const [knownOptions, setKnownOptions] = useState<Record<string, string>>({});
   const ref = useRef<HTMLDivElement>(null);
-  const { results, loading } = useAsyncSuggestions(endpoint, open, query);
+  const { results, loading } = useAsyncSuggestions<AsyncOption>(endpoint, open, query);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -272,7 +231,7 @@ function SearchSelectInput({
             top: 'calc(100% + 4px)',
             left: 0,
             right: 0,
-            background: '#FFFFFF',
+            background: 'var(--color-bg-card)',
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-input)',
             boxShadow: 'var(--shadow-l1)',
@@ -346,7 +305,7 @@ function TagInput({
   const [input, setInput] = useState('');
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { results, loading } = useAsyncSuggestions(endpoint, open, input);
+  const { results, loading } = useAsyncSuggestions<AsyncOption>(endpoint, open, input);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -364,6 +323,17 @@ function TagInput({
       onChange([...value, tag]);
     }
     setInput('');
+  };
+
+  const handleInputBlur = () => {
+    if (input.trim()) {
+      addTag();
+    }
+    window.setTimeout(() => {
+      if (ref.current && !ref.current.contains(document.activeElement)) {
+        setOpen(false);
+      }
+    }, 0);
   };
 
   const pendingTag = input.trim();
@@ -392,6 +362,7 @@ function TagInput({
               addTag();
             }
           }}
+          onBlur={handleInputBlur}
           placeholder={value.length > 0 ? 'Search or add more tags...' : 'Search or add tags...'}
           style={{ ...inputStyle, minWidth: '120px', flex: '1 1 auto' }}
         />
@@ -403,7 +374,7 @@ function TagInput({
             top: 'calc(100% + 4px)',
             left: 0,
             right: 0,
-            background: '#FFFFFF',
+            background: 'var(--color-bg-card)',
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-input)',
             boxShadow: 'var(--shadow-l1)',
@@ -493,7 +464,7 @@ const presetSelectStyle: CSSProperties = {
   borderRadius: 'var(--radius-input)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   outline: 'none',
   cursor: 'pointer',
 };

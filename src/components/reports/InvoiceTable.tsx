@@ -183,7 +183,12 @@ export default function InvoiceTable({
   return (
     <div>
       <div style={tableContainerStyle}>
-        <table style={tableStyle}>
+        <table
+          style={{
+            ...tableStyle,
+            minWidth: showAllColumns ? '1600px' : undefined,
+          }}
+        >
           <thead>
             <tr>
               <th style={thStyle}>Invoice #</th>

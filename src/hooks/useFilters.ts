@@ -151,14 +151,21 @@ export function useFilters(): UseFiltersReturn {
   );
 
   const isDirty = useMemo(() => {
-    if (!activeReport) return Object.keys(filters).length > 0;
+    const normalizedPayload = buildSavedQueryPayload(filters, dateFields);
+
+    if (!activeReport) {
+      return (
+        Object.keys(normalizedPayload.query).length > 0 ||
+        normalizedPayload.dateFields.length > 0
+      );
+    }
     if ('isSystem' in activeReport && activeReport.isSystem) {
-      return stableSerialize(filters) !== stableSerialize(activeReport.query || {});
+      return stableSerialize(normalizedPayload.query) !== stableSerialize(activeReport.query || {});
     }
 
     const report = activeReport as SavedQuery;
     return (
-      stableSerialize(buildSavedQueryPayload(filters, dateFields)) !==
+      stableSerialize(normalizedPayload) !==
       stableSerialize({
         query: report.query || {},
         dateFields: normalizeDateFields(report.dateFields),

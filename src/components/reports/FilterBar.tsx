@@ -86,13 +86,18 @@ function renderFilter(
               { label: 'All of', value: '$all' as const },
             ]
           : undefined;
+      const shouldPersistEmptySelection = Boolean(operatorOptions?.length);
       return (
         <MultiSelectFilter
           key={config.key}
           label={config.label}
           value={val?.[operator] || val || []}
           options={config.options}
-          onChange={(v) => (v.length > 0 ? setFilter(config.key, { [operator]: v }) : removeFilter(config.key))}
+          onChange={(v) =>
+            v.length > 0 || shouldPersistEmptySelection
+              ? setFilter(config.key, { [operator]: v })
+              : removeFilter(config.key)
+          }
           placeholder={config.placeholder}
           allowFreeText={config.key === 'tags'}
           searchEndpoint={config.searchEndpoint}
@@ -100,9 +105,7 @@ function renderFilter(
           operatorOptions={operatorOptions}
           onOperatorChange={(nextOperator) => {
             const selectedValues = val?.$all || val?.$in || [];
-            if (selectedValues.length > 0) {
-              setFilter(config.key, { [nextOperator]: selectedValues });
-            }
+            setFilter(config.key, { [nextOperator]: selectedValues });
           }}
         />
       );

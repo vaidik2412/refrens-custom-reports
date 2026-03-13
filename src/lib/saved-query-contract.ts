@@ -134,11 +134,39 @@ function normalizeLegacyQuery(query: Record<string, any>): Record<string, any> {
   return normalized;
 }
 
+function stripEmptyArrayOperators(query: Record<string, any>): Record<string, any> {
+  return Object.entries(query || {}).reduce<Record<string, any>>((acc, [key, value]) => {
+    if (!isPlainObject(value)) {
+      acc[key] = value;
+      return acc;
+    }
+
+    const cleaned = Object.entries(value).reduce<Record<string, any>>((nested, [op, opValue]) => {
+      if (
+        (op === '$in' || op === '$all' || op === '$nin' || op === '$inOptions') &&
+        Array.isArray(opValue) &&
+        opValue.length === 0
+      ) {
+        return nested;
+      }
+
+      nested[op] = opValue;
+      return nested;
+    }, {});
+
+    if (Object.keys(cleaned).length > 0) {
+      acc[key] = cleaned;
+    }
+
+    return acc;
+  }, {});
+}
+
 export function materializeSavedQueryFilters(
   query: Record<string, any>,
   dateFields: any[] | undefined
 ): Record<string, any> {
-  const materialized = normalizeLegacyQuery(query || {});
+  const materialized = stripEmptyArrayOperators(normalizeLegacyQuery(query || {}));
 
   for (const dateField of normalizeDateFields(dateFields)) {
     materialized[dateField.accessor] = resolveDateField(dateField);
@@ -187,7 +215,7 @@ export function buildSavedQueryPayload(
   dateFields: DateFieldConfig[];
 } {
   const normalizedDateFields = normalizeDateFields(dateFields);
-  const query = normalizeLegacyQuery(filters || {});
+  const query = stripEmptyArrayOperators(normalizeLegacyQuery(filters || {}));
 
   for (const dateField of normalizedDateFields) {
     if (dateField.dateBehaviour === 'dynamic') {

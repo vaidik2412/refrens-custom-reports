@@ -1,7 +1,7 @@
 'use client';
 
 import { CSSProperties, useState, useRef, useEffect } from 'react';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useAsyncSuggestions } from '@/hooks/useAsyncSuggestions';
 
 interface MultiSelectFilterProps {
   label: string;
@@ -25,7 +25,7 @@ const triggerStyle: CSSProperties = {
   borderRadius: 'var(--radius-input)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   cursor: 'pointer',
   whiteSpace: 'nowrap',
   letterSpacing: '-0.25px',
@@ -37,7 +37,7 @@ const menuStyle: CSSProperties = {
   position: 'absolute',
   top: 'calc(100% + 4px)',
   left: 0,
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-input)',
   boxShadow: 'var(--shadow-l1)',
@@ -76,10 +76,8 @@ export default function MultiSelectFilter({
 }: MultiSelectFilterProps) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [remoteOptions, setRemoteOptions] = useState<Array<{ label: string; value: string }>>([]);
-  const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const debouncedInput = useDebounce(input, 300);
+  const { results: remoteOptions, loading } = useAsyncSuggestions(searchEndpoint, open, input);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -88,37 +86,6 @@ export default function MultiSelectFilter({
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
-
-  useEffect(() => {
-    if (!open || !searchEndpoint) return;
-
-    let cancelled = false;
-
-    async function loadOptions() {
-      setLoading(true);
-      try {
-        const res = await fetch(`${searchEndpoint}?q=${encodeURIComponent(debouncedInput)}`);
-        if (!res.ok) return;
-
-        const data = await res.json();
-        if (!cancelled) {
-          setRemoteOptions(Array.isArray(data) ? data : []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch options:', err);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadOptions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedInput, open, searchEndpoint]);
 
   const toggle = (v: string) => {
     if (value.includes(v)) {
@@ -130,22 +97,35 @@ export default function MultiSelectFilter({
 
   const addFreeText = () => {
     const trimmed = input.trim();
-    if (trimmed && !value.includes(trimmed)) {
+    if (trimmed && !value.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
       onChange([...value, trimmed]);
     }
     setInput('');
+  };
+
+  const handleInputBlur = () => {
+    if (allowFreeText && input.trim()) {
+      addFreeText();
+    }
+    window.setTimeout(() => {
+      if (ref.current && !ref.current.contains(document.activeElement)) {
+        setOpen(false);
+      }
+    }, 0);
   };
 
   const filteredOptions = searchEndpoint
     ? remoteOptions
     : options.filter((o) => o.label.toLowerCase().includes(input.toLowerCase()));
 
-  const displayedOptions = filteredOptions.reduce<Array<{ label: string; value: string }>>((acc, option) => {
-    if (!acc.find((existing) => existing.value === option.value)) {
-      acc.push(option);
+  const seen = new Set<string>();
+  const displayedOptions = filteredOptions.filter((option) => {
+    if (seen.has(option.value)) {
+      return false;
     }
-    return acc;
-  }, []);
+    seen.add(option.value);
+    return true;
+  });
 
   const pendingFreeText = input.trim();
   const hasPendingFreeText =
@@ -184,7 +164,7 @@ export default function MultiSelectFilter({
                   border: '1px solid var(--color-border)',
                   borderRadius: '6px',
                   fontSize: '13px',
-                  background: '#FFFFFF',
+                  background: 'var(--color-bg-card)',
                   outline: 'none',
                 }}
               >
@@ -204,6 +184,7 @@ export default function MultiSelectFilter({
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && allowFreeText) addFreeText();
               }}
+              onBlur={handleInputBlur}
               placeholder={
                 allowFreeText
                   ? 'Search or add...'
@@ -226,6 +207,7 @@ export default function MultiSelectFilter({
             <button
               type="button"
               style={{ ...checkItemStyle, fontStyle: 'italic' }}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={addFreeText}
             >
               Add &ldquo;{pendingFreeText}&rdquo;
@@ -235,6 +217,7 @@ export default function MultiSelectFilter({
             <button
               type="button"
               style={{ ...checkItemStyle, color: 'var(--color-text-secondary)', fontStyle: 'italic', fontSize: '12px' }}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => onChange([])}
             >
               Clear all
@@ -255,9 +238,10 @@ export default function MultiSelectFilter({
               type="button"
               key={opt.value}
               style={checkItemStyle}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => toggle(opt.value)}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = 'var(--color-bg-alt)'; }}
-              onMouseLeave={(e) => { (e.target as HTMLElement).style.background = 'none'; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
             >
               <span style={{
                 width: '16px', height: '16px', border: '1.5px solid',
@@ -279,6 +263,7 @@ export default function MultiSelectFilter({
                 type="button"
                 key={v}
                 style={checkItemStyle}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => toggle(v)}
               >
                 <span style={{
