@@ -1,26 +1,23 @@
 'use client';
 
-import { CSSProperties, useMemo } from 'react';
+import { CSSProperties, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  type SortingState,
+  type VisibilityState,
+} from '@tanstack/react-table';
 import { useSavedQueries } from '@/hooks/useSavedQueries';
-import { SYSTEM_REPORTS, BILL_TYPE_OPTIONS } from '@/lib/constants';
+import { SYSTEM_REPORTS } from '@/lib/constants';
 import Button from '@/components/ui/Button';
+import ColumnVisibilityDropdown from './ColumnVisibilityDropdown';
 import { encodeFilters } from '@/lib/url-encoding';
 import { materializeSavedQueryFilters } from '@/lib/saved-query-contract';
+import { reportColumns, type ReportRow } from './reportListingColumns';
 import type { SavedQuery, SystemReport } from '@/types';
-
-// ── Types ────────────────────────────────────────────────────────────────
-
-interface ReportRow {
-  id: string;
-  name: string;
-  description: string;
-  billType: string;
-  createdBy: string;
-  createdOn: string | null;
-  updatedOn: string | null;
-  source: SavedQuery | SystemReport;
-}
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -59,23 +56,9 @@ function buildReportRows(
   return rows;
 }
 
-function getBillTypeLabel(value: string): string {
-  if (!value) return 'All Types';
-  const opt = BILL_TYPE_OPTIONS.find((o) => o.value === value);
-  return opt?.label || value;
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '--';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
 // ── Styles ───────────────────────────────────────────────────────────────
+
+const PAGE_LIMIT = 10;
 
 const pageHeaderStyle: CSSProperties = {
   fontSize: '22px',
@@ -112,12 +95,32 @@ const thStyle: CSSProperties = {
   background: 'var(--color-bg-alt)',
   position: 'sticky',
   top: 0,
+  cursor: 'pointer',
+  userSelect: 'none',
 };
 
 const tdStyle: CSSProperties = {
   padding: '8px 12px',
   borderBottom: '1px solid var(--color-border)',
   color: 'var(--color-text-primary)',
+};
+
+const paginationStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: 'var(--sp-3) 0',
+};
+
+const pageBtnStyle: CSSProperties = {
+  padding: '6px 12px',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-tag)',
+  background: 'var(--color-bg-card)',
+  fontSize: '13px',
+  color: 'var(--color-text-primary)',
+  cursor: 'pointer',
+  letterSpacing: '-0.25px',
 };
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -131,25 +134,54 @@ export default function ReportsListingDashboard() {
     [savedQueries]
   );
 
+  // ── Table state ──────────────────────────────────────────────────────
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [page, setPage] = useState(0);
+
+  const table = useReactTable({
+    data: rows,
+    columns: reportColumns,
+    state: { sorting, columnVisibility },
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  // ── Pagination ───────────────────────────────────────────────────────
+  const allRows = table.getRowModel().rows;
+  const totalRows = allRows.length;
+  const totalPages = Math.ceil(totalRows / PAGE_LIMIT);
+  const paginatedRows = allRows.slice(page * PAGE_LIMIT, (page + 1) * PAGE_LIMIT);
+  const from = totalRows > 0 ? page * PAGE_LIMIT + 1 : 0;
+  const to = Math.min((page + 1) * PAGE_LIMIT, totalRows);
+
+  // Reset page when data changes
+  const dataLen = rows.length;
+  useMemo(() => setPage(0), [dataLen]);
+
+  // ── Row click ────────────────────────────────────────────────────────
   const handleRowClick = (row: ReportRow) => {
     const report = row.source;
-    let filters: Record<string, any>;
     const params = new URLSearchParams();
 
     if ('isSystem' in report && report.isSystem) {
-      filters = { ...report.query };
       params.set('reportId', report.id);
       params.set('reportKind', 'system');
+      params.set('fq', encodeFilters({ ...report.query }));
     } else {
       const sq = report as SavedQuery;
-      filters = materializeSavedQueryFilters(sq.query, sq.dateFields);
+      const filters = materializeSavedQueryFilters(sq.query, sq.dateFields);
       params.set('reportId', sq._id);
       params.set('reportKind', 'saved');
+      params.set('fq', encodeFilters(filters));
     }
 
-    params.set('fq', encodeFilters(filters));
     router.push(`/reports/invoices?${params.toString()}`);
   };
+
+  // ── Render ───────────────────────────────────────────────────────────
 
   const pageHeader = (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -162,14 +194,7 @@ export default function ReportsListingDashboard() {
     return (
       <div>
         {pageHeader}
-        <div
-          style={{
-            padding: '48px',
-            textAlign: 'center',
-            color: 'var(--color-text-secondary)',
-            fontSize: '14px',
-          }}
-        >
+        <div style={{ padding: '48px', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '14px' }}>
           Loading reports...
         </div>
       </div>
@@ -180,15 +205,7 @@ export default function ReportsListingDashboard() {
     return (
       <div>
         {pageHeader}
-        <div
-          style={{
-            padding: '48px',
-            textAlign: 'center',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-input)',
-            background: 'var(--color-bg-card)',
-          }}
-        >
+        <div style={{ padding: '48px', textAlign: 'center', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)', background: 'var(--color-bg-card)' }}>
           <div style={{ fontSize: '15px', fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: '4px' }}>
             No reports found
           </div>
@@ -200,93 +217,132 @@ export default function ReportsListingDashboard() {
     );
   }
 
+  const headerGroups = table.getHeaderGroups();
+
   return (
     <div>
       {pageHeader}
 
       {error && (
-        <div
-          style={{
-            marginBottom: '16px',
-            padding: '12px 14px',
-            border: '1px solid var(--color-error-banner-border)',
-            borderRadius: 'var(--radius-input)',
-            background: 'var(--color-error-banner-bg)',
-            color: 'var(--color-error-banner-text)',
-            fontSize: '13px',
-            lineHeight: 1.5,
-          }}
-        >
+        <div style={{ marginBottom: '16px', padding: '12px 14px', border: '1px solid var(--color-error-banner-border)', borderRadius: 'var(--radius-input)', background: 'var(--color-error-banner-bg)', color: 'var(--color-error-banner-text)', fontSize: '13px', lineHeight: 1.5 }}>
           Couldn&apos;t load saved reports from MongoDB. Showing built-in system reports only.
           <span style={{ marginLeft: '6px', opacity: 0.8 }}>{error}</span>
         </div>
       )}
 
+      {/* Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--sp-2)' }}>
+        <ColumnVisibilityDropdown table={table} />
+      </div>
+
+      {/* Table */}
       <div style={tableContainerStyle}>
         <table style={tableStyle}>
           <thead>
-            <tr>
-              <th style={thStyle}>Name</th>
-              <th style={thStyle}>Description</th>
-              <th style={thStyle}>Bill Type</th>
-              <th style={thStyle}>Created By</th>
-              <th style={thStyle}>Created On</th>
-              <th style={thStyle}>Last Updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, idx) => (
-              <tr
-                key={row.id}
-                style={{
-                  background: idx % 2 === 0 ? 'var(--color-bg-card)' : 'var(--color-bg-alt)',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = 'var(--color-row-hover)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.background =
-                    idx % 2 === 0 ? 'var(--color-bg-card)' : 'var(--color-bg-alt)';
-                }}
-                onClick={() => handleRowClick(row)}
-              >
-                <td style={{ ...tdStyle, fontWeight: 500, whiteSpace: 'nowrap' }}>
-                  {row.name}
-                </td>
-                <td
-                  style={{
-                    ...tdStyle,
-                    maxWidth: '240px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    color: row.description
-                      ? 'var(--color-text-primary)'
-                      : 'var(--color-text-secondary)',
-                  }}
-                >
-                  {row.description || '--'}
-                </td>
-                <td style={tdStyle}>
-                  <span style={{ fontSize: '12px' }}>
-                    {getBillTypeLabel(row.billType)}
-                  </span>
-                </td>
-                <td style={{ ...tdStyle, fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                  {row.createdBy}
-                </td>
-                <td style={{ ...tdStyle, fontSize: '12px', whiteSpace: 'nowrap', color: 'var(--color-text-secondary)' }}>
-                  {formatDate(row.createdOn)}
-                </td>
-                <td style={{ ...tdStyle, fontSize: '12px', whiteSpace: 'nowrap', color: 'var(--color-text-secondary)' }}>
-                  {formatDate(row.updatedOn)}
-                </td>
+            {headerGroups.map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  const isSorted = header.column.getIsSorted();
+                  return (
+                    <th
+                      key={header.id}
+                      style={{
+                        ...thStyle,
+                        width: header.getSize(),
+                        cursor: header.column.getCanSort() ? 'pointer' : 'default',
+                      }}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getCanSort() && (
+                          <span style={{ fontSize: '10px', opacity: isSorted ? 1 : 0.3, color: isSorted ? 'var(--color-cta-primary)' : 'var(--color-text-secondary)' }}>
+                            {isSorted === 'asc' ? '\u2191' : isSorted === 'desc' ? '\u2193' : '\u2195'}
+                          </span>
+                        )}
+                      </span>
+                    </th>
+                  );
+                })}
               </tr>
             ))}
+          </thead>
+          <tbody>
+            {paginatedRows.map((row, idx) => {
+              const reportRow = row.original;
+              const globalIdx = page * PAGE_LIMIT + idx;
+              const meta = (col: any) => (col.columnDef.meta || {}) as Record<string, any>;
+              return (
+                <tr
+                  key={row.id}
+                  style={{
+                    background: globalIdx % 2 === 0 ? 'var(--color-bg-card)' : 'var(--color-bg-alt)',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = 'var(--color-row-hover)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background =
+                      globalIdx % 2 === 0 ? 'var(--color-bg-card)' : 'var(--color-bg-alt)';
+                  }}
+                  onClick={() => handleRowClick(reportRow)}
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const m = meta(cell.column);
+                    const isDescription = cell.column.id === 'description';
+                    return (
+                      <td
+                        key={cell.id}
+                        style={{
+                          ...tdStyle,
+                          width: cell.column.getSize(),
+                          ...(m.cellStyle || {}),
+                          ...(isDescription && !reportRow.description
+                            ? { color: 'var(--color-text-secondary)' }
+                            : {}),
+                        }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalRows > 0 && (
+        <div style={paginationStyle}>
+          <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+            Showing {from}&ndash;{to} of {totalRows}
+          </span>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+            <button
+              type="button"
+              style={{ ...pageBtnStyle, opacity: page === 0 ? 0.4 : 1, cursor: page === 0 ? 'not-allowed' : 'pointer' }}
+              onClick={() => page > 0 && setPage(page - 1)}
+              disabled={page === 0}
+            >
+              &#x2190; Prev
+            </button>
+            <span style={{ display: 'flex', alignItems: 'center', fontSize: '13px', color: 'var(--color-text-secondary)', padding: '0 var(--sp-2)' }}>
+              Page {page + 1} of {totalPages || 1}
+            </span>
+            <button
+              type="button"
+              style={{ ...pageBtnStyle, opacity: page >= totalPages - 1 ? 0.4 : 1, cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer' }}
+              onClick={() => page < totalPages - 1 && setPage(page + 1)}
+              disabled={page >= totalPages - 1}
+            >
+              Next &#x2192;
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

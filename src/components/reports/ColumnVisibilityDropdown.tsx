@@ -2,10 +2,9 @@
 
 import { CSSProperties, useState, useRef, useEffect } from 'react';
 import type { Table } from '@tanstack/react-table';
-import type { InvoiceRow } from '@/types';
 
 interface Props {
-  table: Table<InvoiceRow>;
+  table: Table<any>;
 }
 
 const btnStyle: CSSProperties = {
