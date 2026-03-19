@@ -14,7 +14,7 @@ interface ConditionGroupProps {
 }
 
 const groupContainerStyle: CSSProperties = {
-  borderLeft: '3px solid var(--color-cta-primary)',
+  border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-input)',
   background: 'var(--color-bg-secondary)',
   padding: '12px 16px',
@@ -109,6 +109,7 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
           <LogicalOperatorToggle
             value={group.logicalOperator}
             onChange={toggleOperator}
+            variant="nested"
           />
         </div>
         <button
@@ -140,9 +141,9 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
               <div style={{
                 textAlign: 'center',
                 padding: '2px 0',
-                fontSize: '11px',
+                fontSize: '10px',
                 fontWeight: 600,
-                color: 'var(--color-cta-primary)',
+                color: 'var(--color-chip-text)',
                 letterSpacing: '0.5px',
                 textTransform: 'uppercase',
               }}>
