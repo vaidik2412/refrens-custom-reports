@@ -148,9 +148,11 @@ export default function ConditionList({ group, onUpdate, billType }: ConditionLi
           )}
         </div>
         <div style={actionsStyle}>
-          <Button variant="ghost" size="sm" onClick={addCondition}>
-            + Add filter
-          </Button>
+          {groups.length === 0 && (
+            <Button variant="ghost" size="sm" onClick={addCondition}>
+              + Add filter
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={addGroup}>
             + Add group
           </Button>

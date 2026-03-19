@@ -115,7 +115,6 @@ export default function FieldPicker({ value, onChange, usedFields, billType }: F
               <div key={cat}>
                 <div style={categoryStyle}>{CATEGORY_LABELS[cat] || cat}</div>
                 {fields.map((field) => {
-                  const isUsed = usedFields.includes(field.key) && field.key !== value;
                   return (
                     <button
                       key={field.key}
@@ -124,7 +123,6 @@ export default function FieldPicker({ value, onChange, usedFields, billType }: F
                         ...itemStyle,
                         fontWeight: field.key === value ? 500 : 400,
                         background: field.key === value ? 'var(--color-bg-alt)' : 'none',
-                        opacity: isUsed ? 0.45 : 1,
                       }}
                       onMouseEnter={(e) => {
                         if (field.key !== value) {
