@@ -5,6 +5,7 @@ import ConditionRow from './ConditionRow';
 import LogicalOperatorToggle from './LogicalOperatorToggle';
 import Button from '@/components/ui/Button';
 import type { QueryCondition, QueryGroup, LogicalOperator } from '@/types/query-builder';
+import { detectWarnings } from '@/lib/condition-warnings';
 
 interface ConditionGroupProps {
   group: QueryGroup;
@@ -101,6 +102,11 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
     onUpdate({ ...group, logicalOperator: op });
   };
 
+  const warnings = useMemo(
+    () => detectWarnings(group.conditions, group.logicalOperator),
+    [group.conditions, group.logicalOperator]
+  );
+
   return (
     <div style={groupContainerStyle}>
       <div style={groupHeaderStyle}>
@@ -129,6 +135,35 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
           &#x2715;
         </button>
       </div>
+
+      {warnings.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {warnings.map((w, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 10px',
+                borderRadius: 'var(--radius-tag)',
+                fontSize: '12px',
+                fontWeight: 500,
+                letterSpacing: '-0.2px',
+                background: w.type === 'contradiction'
+                  ? 'var(--color-error-hover-bg, #FEF2F2)'
+                  : 'var(--color-warning-bg, #FFFBEB)',
+                color: w.type === 'contradiction'
+                  ? 'var(--color-error, #DC2626)'
+                  : 'var(--color-warning-text, #92400E)',
+              }}
+            >
+              <span>{w.type === 'contradiction' ? '⚠' : 'ℹ'}</span>
+              <span>{w.message}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {group.conditions.length === 0 ? (
         <div style={emptyStyle}>
