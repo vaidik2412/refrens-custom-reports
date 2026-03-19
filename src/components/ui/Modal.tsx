@@ -13,7 +13,7 @@ interface ModalProps {
 const overlayStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
-  background: 'rgba(0,0,0,0.4)',
+  background: 'var(--color-overlay)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -21,7 +21,7 @@ const overlayStyle: CSSProperties = {
 };
 
 const modalStyle: CSSProperties = {
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   borderRadius: 'var(--radius-modal)',
   width: 'var(--width-modal)',
   maxHeight: '90vh',
@@ -36,7 +36,7 @@ const headerStyle: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: '20px 24px 16px',
-  borderBottom: '1px solid #F3F4F6',
+  borderBottom: '1px solid var(--color-border-modal)',
   flexShrink: 0,
 };
 
@@ -68,7 +68,7 @@ const footerStyle: CSSProperties = {
   justifyContent: 'flex-end',
   gap: '8px',
   padding: '16px 24px',
-  borderTop: '1px solid #F3F4F6',
+  borderTop: '1px solid var(--color-border-modal)',
   flexShrink: 0,
 };
 

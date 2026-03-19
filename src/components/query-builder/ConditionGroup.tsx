@@ -5,6 +5,7 @@ import ConditionRow from './ConditionRow';
 import LogicalOperatorToggle from './LogicalOperatorToggle';
 import Button from '@/components/ui/Button';
 import type { QueryCondition, QueryGroup, LogicalOperator } from '@/types/query-builder';
+import { detectWarnings } from '@/lib/condition-warnings';
 
 interface ConditionGroupProps {
   group: QueryGroup;
@@ -14,9 +15,9 @@ interface ConditionGroupProps {
 }
 
 const groupContainerStyle: CSSProperties = {
-  borderLeft: '3px solid var(--color-cta-primary)',
+  border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-input)',
-  background: 'var(--color-bg-secondary, #F9FAFB)',
+  background: 'var(--color-bg-secondary)',
   padding: '12px 16px',
   display: 'flex',
   flexDirection: 'column',
@@ -47,7 +48,7 @@ const removeBtnStyle: CSSProperties = {
   background: 'none',
   color: 'var(--color-text-secondary)',
   cursor: 'pointer',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-tag)',
   fontSize: '13px',
   transition: 'background 0.15s, color 0.15s',
   flexShrink: 0,
@@ -101,6 +102,11 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
     onUpdate({ ...group, logicalOperator: op });
   };
 
+  const warnings = useMemo(
+    () => detectWarnings(group.conditions, group.logicalOperator),
+    [group.conditions, group.logicalOperator]
+  );
+
   return (
     <div style={groupContainerStyle}>
       <div style={groupHeaderStyle}>
@@ -109,6 +115,7 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
           <LogicalOperatorToggle
             value={group.logicalOperator}
             onChange={toggleOperator}
+            variant="nested"
           />
         </div>
         <button
@@ -116,7 +123,7 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
           style={removeBtnStyle}
           onClick={onRemove}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.08)';
+            (e.currentTarget as HTMLElement).style.background = 'var(--color-error-hover-bg)';
             (e.currentTarget as HTMLElement).style.color = 'var(--color-error)';
           }}
           onMouseLeave={(e) => {
@@ -129,6 +136,35 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
         </button>
       </div>
 
+      {warnings.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {warnings.map((w, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 10px',
+                borderRadius: 'var(--radius-tag)',
+                fontSize: '12px',
+                fontWeight: 500,
+                letterSpacing: '-0.2px',
+                background: w.type === 'contradiction'
+                  ? 'var(--color-error-hover-bg, #FEF2F2)'
+                  : 'var(--color-warning-bg, #FFFBEB)',
+                color: w.type === 'contradiction'
+                  ? 'var(--color-error, #DC2626)'
+                  : 'var(--color-warning-text, #92400E)',
+              }}
+            >
+              <span>{w.type === 'contradiction' ? '⚠' : 'ℹ'}</span>
+              <span>{w.message}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {group.conditions.length === 0 ? (
         <div style={emptyStyle}>
           No filters in this group. Add one below.
@@ -140,9 +176,9 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
               <div style={{
                 textAlign: 'center',
                 padding: '2px 0',
-                fontSize: '11px',
+                fontSize: '10px',
                 fontWeight: 600,
-                color: 'var(--color-cta-primary)',
+                color: 'var(--color-chip-text)',
                 letterSpacing: '0.5px',
                 textTransform: 'uppercase',
               }}>

@@ -15,15 +15,15 @@ interface RadioGroupProps {
 }
 
 const groupStyle: CSSProperties = {
-  display: 'flex',
+  display: 'inline-flex',
   gap: '0',
-  border: '1px solid rgba(0,0,0,0.15)',
+  border: '1px solid var(--color-border-input)',
   borderRadius: 'var(--radius-input)',
   overflow: 'hidden',
 };
 
 const optionStyle: CSSProperties = {
-  padding: '8px 20px',
+  padding: '6px 16px',
   fontSize: '13px',
   fontWeight: 500,
   letterSpacing: '-0.25px',
@@ -31,6 +31,9 @@ const optionStyle: CSSProperties = {
   border: 'none',
   transition: 'background 0.15s, color 0.15s',
   whiteSpace: 'nowrap',
+  flex: '1 1 0',
+  textAlign: 'center',
+  minWidth: '72px',
 };
 
 const labelStyle: CSSProperties = {
@@ -53,8 +56,8 @@ export default function RadioGroup({ label, options, value, onChange }: RadioGro
             type="button"
             style={{
               ...optionStyle,
-              background: value === opt.value ? 'var(--color-cta-primary)' : '#FFFFFF',
-              color: value === opt.value ? '#FFFFFF' : 'var(--color-text-primary)',
+              background: value === opt.value ? 'var(--color-cta-primary)' : 'var(--color-bg-card)',
+              color: value === opt.value ? 'var(--color-bg-card)' : 'var(--color-text-primary)',
             }}
             onClick={() => onChange(opt.value)}
           >

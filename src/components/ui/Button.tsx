@@ -26,13 +26,13 @@ const baseStyle: CSSProperties = {
 const variants: Record<ButtonVariant, CSSProperties> = {
   primary: {
     background: 'var(--color-cta-primary)',
-    color: '#FFFFFF',
+    color: 'var(--color-bg-card)',
     border: 'none',
   },
   secondary: {
-    background: '#FFFFFF',
+    background: 'var(--color-bg-card)',
     color: 'var(--color-text-primary)',
-    border: '1px solid rgba(0,0,0,0.15)',
+    border: '1px solid var(--color-border-input)',
   },
   ghost: {
     background: 'transparent',

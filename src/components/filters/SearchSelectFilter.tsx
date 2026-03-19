@@ -135,7 +135,7 @@ export default function SearchSelectFilter({
               placeholder="Search or browse..."
               style={{
                 width: '100%', padding: '6px 8px',
-                border: '1px solid var(--color-border)', borderRadius: '6px',
+                border: '1px solid var(--color-border)', borderRadius: 'var(--radius-tag)',
                 fontSize: '13px', outline: 'none',
               }}
               autoFocus
@@ -186,7 +186,7 @@ export default function SearchSelectFilter({
                   borderColor: selectedIds.includes(opt.value) ? 'var(--color-cta-primary)' : 'var(--color-icon-border)',
                   borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   background: selectedIds.includes(opt.value) ? 'var(--color-cta-primary)' : 'transparent',
-                  color: '#FFFFFF', fontSize: '11px', flexShrink: 0,
+                  color: 'var(--color-bg-card)', fontSize: '11px', flexShrink: 0,
                 }}>
                   {selectedIds.includes(opt.value) && '\u2713'}
                 </span>

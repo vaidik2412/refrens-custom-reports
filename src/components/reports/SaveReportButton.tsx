@@ -144,7 +144,7 @@ export default function SaveReportButton({
             justifyContent: 'center',
             padding: '8px 16px',
             background: 'var(--color-cta-primary)',
-            color: '#FFFFFF',
+            color: 'var(--color-bg-card)',
             border: 'none',
             borderRadius: 'var(--radius-input)',
             fontSize: '14px',
@@ -173,7 +173,7 @@ export default function SaveReportButton({
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.4)',
+            background: 'var(--color-overlay)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -183,7 +183,7 @@ export default function SaveReportButton({
         >
           <div
             style={{
-              background: '#FFFFFF',
+              background: 'var(--color-bg-card)',
               borderRadius: 'var(--radius-modal)',
               padding: '24px',
               width: '400px',
@@ -203,7 +203,7 @@ export default function SaveReportButton({
                   padding: '8px 16px',
                   border: '1px solid var(--color-border)',
                   borderRadius: 'var(--radius-input)',
-                  background: '#FFFFFF',
+                  background: 'var(--color-bg-card)',
                   color: 'var(--color-text-primary)',
                   fontSize: '14px',
                   cursor: 'pointer',
@@ -221,7 +221,7 @@ export default function SaveReportButton({
                   border: 'none',
                   borderRadius: 'var(--radius-input)',
                   background: 'var(--color-error)',
-                  color: '#FFFFFF',
+                  color: 'var(--color-bg-card)',
                   fontSize: '14px',
                   fontWeight: 500,
                   cursor: 'pointer',

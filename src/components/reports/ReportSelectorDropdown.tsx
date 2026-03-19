@@ -22,7 +22,7 @@ const triggerStyle: CSSProperties = {
   fontSize: '14px',
   fontWeight: 500,
   color: 'var(--color-text-primary)',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   cursor: 'pointer',
   whiteSpace: 'nowrap',
   letterSpacing: '-0.25px',
@@ -34,7 +34,7 @@ const menuStyle: CSSProperties = {
   position: 'absolute',
   top: 'calc(100% + 4px)',
   left: 0,
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-input)',
   boxShadow: 'var(--shadow-l1)',
@@ -321,7 +321,7 @@ export default function ReportSelectorDropdown({
                       <span
                         style={{
                           fontSize: '10px',
-                          color: 'var(--color-text-tertiary)',
+                          color: 'var(--color-text-secondary)',
                           marginLeft: 'auto',
                         }}
                       >

@@ -20,8 +20,8 @@
   /* Brand / Accent */
   --color-brand-purple: #7B3EFF;
   --color-brand-purple-hover: #8736E7;
-  --color-cta-primary: #4F46E5;
-  --color-cta-primary-hover: #4338CA;
+  --color-cta-primary: #7B3EFF;
+  --color-cta-primary-hover: #8736E7;
 
   /* Token Chip */
   --color-chip-bg: #F7F3FD;
@@ -45,10 +45,39 @@
   --radius-modal: 16px;
   --radius-pill: 28px;
 
+  /* Overlay & Input borders */
+  --color-overlay: rgba(0, 0, 0, 0.4);
+  --color-border-input: rgba(0, 0, 0, 0.15);
+  --color-border-modal: #F3F4F6;
+  --color-bg-secondary: #F9FAFB;
+  --color-row-hover: #F5F3FF;
+
+  /* Error banner */
+  --color-error-banner-bg: #FFF6F3;
+  --color-error-banner-border: rgba(214, 78, 67, 0.2);
+  --color-error-banner-text: #A33A2F;
+
+  /* Status badges */
+  --color-status-paid-bg: #ECFDF5;
+  --color-status-paid-text: #059669;
+  --color-status-unpaid-bg: #FEF3C7;
+  --color-status-unpaid-text: #D97706;
+  --color-status-overdue-bg: #FEE2E2;
+  --color-status-overdue-text: #DC2626;
+  --color-status-partial-bg: #EFF6FF;
+  --color-status-partial-text: #2563EB;
+
+  /* Interactive states */
+  --color-error-hover-bg: rgba(239, 68, 68, 0.08);
+  --color-divider-on-primary: rgba(255, 255, 255, 0.25);
+
   /* Shadows */
   --shadow-l1: 0px 2px 8px rgba(20, 28, 39, 0.12);
+  --shadow-l2: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.15);
   --shadow-drawer: -4px 0 24px rgba(20, 28, 39, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(123, 62, 255, 0.1);
+  --shadow-toggle-thumb: 0 1px 3px rgba(0, 0, 0, 0.15);
 
   /* Sizing */
   --width-modal: 560px;

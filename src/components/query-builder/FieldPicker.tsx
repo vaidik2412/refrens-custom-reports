@@ -14,9 +14,9 @@ const triggerStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   padding: '6px 10px',
-  border: '1px solid rgba(0,0,0,0.15)',
+  border: '1px solid var(--color-border-input)',
   borderRadius: 'var(--radius-input)',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   fontSize: '13px',
   fontWeight: 400,
   color: 'var(--color-text-primary)',
@@ -32,7 +32,7 @@ const menuStyle: CSSProperties = {
   position: 'absolute',
   top: 'calc(100% + 4px)',
   left: 0,
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-input)',
   boxShadow: 'var(--shadow-l1)',
@@ -115,7 +115,6 @@ export default function FieldPicker({ value, onChange, usedFields, billType }: F
               <div key={cat}>
                 <div style={categoryStyle}>{CATEGORY_LABELS[cat] || cat}</div>
                 {fields.map((field) => {
-                  const isUsed = usedFields.includes(field.key) && field.key !== value;
                   return (
                     <button
                       key={field.key}
@@ -124,7 +123,6 @@ export default function FieldPicker({ value, onChange, usedFields, billType }: F
                         ...itemStyle,
                         fontWeight: field.key === value ? 500 : 400,
                         background: field.key === value ? 'var(--color-bg-alt)' : 'none',
-                        opacity: isUsed ? 0.45 : 1,
                       }}
                       onMouseEnter={(e) => {
                         if (field.key !== value) {

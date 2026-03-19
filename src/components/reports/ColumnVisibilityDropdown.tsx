@@ -2,17 +2,16 @@
 
 import { CSSProperties, useState, useRef, useEffect } from 'react';
 import type { Table } from '@tanstack/react-table';
-import type { InvoiceRow } from '@/types';
 
 interface Props {
-  table: Table<InvoiceRow>;
+  table: Table<any>;
 }
 
 const btnStyle: CSSProperties = {
   padding: '6px 12px',
   border: '1px solid var(--color-border)',
-  borderRadius: '6px',
-  background: '#FFFFFF',
+  borderRadius: 'var(--radius-tag)',
+  background: 'var(--color-bg-card)',
   fontSize: '12px',
   fontWeight: 500,
   color: 'var(--color-text-primary)',
@@ -25,10 +24,10 @@ const menuStyle: CSSProperties = {
   position: 'absolute',
   top: 'calc(100% + 4px)',
   right: 0,
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   border: '1px solid var(--color-border)',
-  borderRadius: '8px',
-  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+  borderRadius: 'var(--radius-input)',
+  boxShadow: 'var(--shadow-l2)',
   zIndex: 50,
   maxHeight: '320px',
   overflowY: 'auto',

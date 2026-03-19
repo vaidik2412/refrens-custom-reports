@@ -33,7 +33,8 @@ const titleStyle: CSSProperties = {
   fontSize: '22px',
   fontWeight: 600,
   color: 'var(--color-text-primary)',
-  letterSpacing: '-0.5px',
+  lineHeight: '32px',
+  letterSpacing: '-0.25px',
   margin: 0,
   flex: 1,
 };
@@ -50,16 +51,17 @@ const backLinkStyle: CSSProperties = {
 };
 
 const sectionStyle: CSSProperties = {
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-card)',
   padding: '20px',
 };
 
 const sectionTitleStyle: CSSProperties = {
-  fontSize: '14px',
+  fontSize: '16px',
   fontWeight: 600,
   color: 'var(--color-text-primary)',
+  lineHeight: '24px',
   letterSpacing: '-0.25px',
   margin: '0 0 12px 0',
 };

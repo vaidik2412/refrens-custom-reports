@@ -22,7 +22,7 @@ interface DropdownProps {
 const menuStyle: CSSProperties = {
   position: 'absolute',
   top: 'calc(100% + 4px)',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-input)',
   boxShadow: 'var(--shadow-l1)',

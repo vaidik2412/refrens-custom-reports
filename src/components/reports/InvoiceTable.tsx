@@ -32,7 +32,7 @@ const tableContainerStyle: CSSProperties = {
   overflowX: 'auto',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-input)',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
 };
 
 const tableStyle: CSSProperties = {
@@ -43,13 +43,12 @@ const tableStyle: CSSProperties = {
 };
 
 const thStyle: CSSProperties = {
-  padding: '10px 12px',
+  padding: '8px 12px',
   textAlign: 'left',
-  fontWeight: 600,
-  fontSize: '11px',
-  color: 'var(--color-text-secondary)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.5px',
+  fontWeight: 500,
+  fontSize: '14px',
+  color: 'var(--color-text-column)',
+  letterSpacing: '-0.25px',
   borderBottom: '2px solid var(--color-border)',
   whiteSpace: 'nowrap',
   background: 'var(--color-bg-alt)',
@@ -61,7 +60,7 @@ const thStyle: CSSProperties = {
 };
 
 const tdStyle: CSSProperties = {
-  padding: '10px 12px',
+  padding: '8px 12px',
   borderBottom: '1px solid var(--color-border)',
   color: 'var(--color-text-primary)',
   whiteSpace: 'nowrap',
@@ -79,8 +78,8 @@ const paginationStyle: CSSProperties = {
 const pageBtnStyle: CSSProperties = {
   padding: '6px 12px',
   border: '1px solid var(--color-border)',
-  borderRadius: '6px',
-  background: '#FFFFFF',
+  borderRadius: 'var(--radius-tag)',
+  background: 'var(--color-bg-card)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
   cursor: 'pointer',
@@ -200,7 +199,7 @@ export default function InvoiceTable({
           textAlign: 'center',
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-input)',
-          background: '#FFFFFF',
+          background: 'var(--color-bg-card)',
         }}
       >
         <div style={{ fontSize: '32px', marginBottom: '8px', opacity: 0.3 }}>
@@ -321,15 +320,15 @@ export default function InvoiceTable({
                 key={row.id}
                 style={{
                   background:
-                    idx % 2 === 0 ? '#FFFFFF' : 'var(--color-bg-alt)',
+                    idx % 2 === 0 ? 'var(--color-bg-card)' : 'var(--color-bg-alt)',
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.background =
-                    '#F5F3FF';
+                    'var(--color-row-hover)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.background =
-                    idx % 2 === 0 ? '#FFFFFF' : 'var(--color-bg-alt)';
+                    idx % 2 === 0 ? 'var(--color-bg-card)' : 'var(--color-bg-alt)';
                 }}
               >
                 {row.getVisibleCells().map((cell) => {

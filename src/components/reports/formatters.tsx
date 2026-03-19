@@ -3,10 +3,10 @@
 import { BILL_TYPE_OPTIONS } from '@/lib/constants';
 
 export const statusColors: Record<string, { bg: string; text: string }> = {
-  PAID: { bg: '#ECFDF5', text: '#059669' },
-  UNPAID: { bg: '#FEF3C7', text: '#D97706' },
-  OVERDUE: { bg: '#FEE2E2', text: '#DC2626' },
-  PARTIALLY_PAID: { bg: '#EFF6FF', text: '#2563EB' },
+  PAID: { bg: 'var(--color-status-paid-bg)', text: 'var(--color-status-paid-text)' },
+  UNPAID: { bg: 'var(--color-status-unpaid-bg)', text: 'var(--color-status-unpaid-text)' },
+  OVERDUE: { bg: 'var(--color-status-overdue-bg)', text: 'var(--color-status-overdue-text)' },
+  PARTIALLY_PAID: { bg: 'var(--color-status-partial-bg)', text: 'var(--color-status-partial-text)' },
   DRAFT: { bg: 'var(--color-bg-alt)', text: 'var(--color-text-secondary)' },
 };
 

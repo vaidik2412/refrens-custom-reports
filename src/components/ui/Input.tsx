@@ -10,13 +10,13 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 const inputStyle: CSSProperties = {
   width: '100%',
   padding: '8px 12px',
-  border: '1px solid rgba(0,0,0,0.15)',
+  border: '1px solid var(--color-border-input)',
   borderRadius: 'var(--radius-input)',
   fontSize: '14px',
   color: 'var(--color-text-primary)',
   outline: 'none',
   transition: 'border-color 0.15s, box-shadow 0.15s',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
 };
 
 const labelStyle: CSSProperties = {
@@ -40,11 +40,11 @@ export default function Input({ label, error, style, ...props }: InputProps) {
         }}
         onFocus={(e) => {
           e.target.style.borderColor = 'var(--color-cta-primary)';
-          e.target.style.boxShadow = '0 0 0 3px rgba(79,70,229,0.1)';
+          e.target.style.boxShadow = 'var(--shadow-focus)';
           props.onFocus?.(e);
         }}
         onBlur={(e) => {
-          e.target.style.borderColor = error ? 'var(--color-error)' : 'rgba(0,0,0,0.15)';
+          e.target.style.borderColor = error ? 'var(--color-error)' : 'var(--color-border-input)';
           e.target.style.boxShadow = 'none';
           props.onBlur?.(e);
         }}
@@ -76,10 +76,10 @@ export function Textarea({
         }}
         onFocus={(e) => {
           e.target.style.borderColor = 'var(--color-cta-primary)';
-          e.target.style.boxShadow = '0 0 0 3px rgba(79,70,229,0.1)';
+          e.target.style.boxShadow = 'var(--shadow-focus)';
         }}
         onBlur={(e) => {
-          e.target.style.borderColor = 'rgba(0,0,0,0.15)';
+          e.target.style.borderColor = 'var(--color-border-input)';
           e.target.style.boxShadow = 'none';
         }}
         {...props}

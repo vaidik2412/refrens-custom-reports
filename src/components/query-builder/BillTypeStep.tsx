@@ -10,9 +10,9 @@ interface BillTypeStepProps {
 
 const selectStyle: CSSProperties = {
   padding: '6px 10px',
-  border: '1px solid rgba(0,0,0,0.15)',
+  border: '1px solid var(--color-border-input)',
   borderRadius: 'var(--radius-input)',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   fontSize: '13px',
   fontWeight: 400,
   color: 'var(--color-text-primary)',
@@ -33,10 +33,10 @@ export default function BillTypeStep({ value, onChange }: BillTypeStepProps) {
       }}
       onFocus={(e) => {
         e.target.style.borderColor = 'var(--color-cta-primary)';
-        e.target.style.boxShadow = '0 0 0 3px rgba(79,70,229,0.1)';
+        e.target.style.boxShadow = 'var(--shadow-focus)';
       }}
       onBlur={(e) => {
-        e.target.style.borderColor = 'rgba(0,0,0,0.15)';
+        e.target.style.borderColor = 'var(--color-border-input)';
         e.target.style.boxShadow = 'none';
       }}
     >
