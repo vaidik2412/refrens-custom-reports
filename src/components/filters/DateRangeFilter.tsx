@@ -17,7 +17,7 @@ const triggerStyle: CSSProperties = {
   borderRadius: 'var(--radius-input)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   cursor: 'pointer',
   whiteSpace: 'nowrap',
   letterSpacing: '-0.25px',
@@ -29,7 +29,7 @@ const popoverStyle: CSSProperties = {
   position: 'absolute',
   top: 'calc(100% + 4px)',
   left: 0,
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-input)',
   boxShadow: 'var(--shadow-l1)',
@@ -44,7 +44,7 @@ const popoverStyle: CSSProperties = {
 const dateInputStyle: CSSProperties = {
   padding: '6px 8px',
   border: '1px solid var(--color-border)',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-tag)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
   outline: 'none',
@@ -132,9 +132,9 @@ export default function DateRangeFilter({ label, value, onChange }: DateRangeFil
               onClick={apply}
               disabled={!from || !to}
               style={{
-                padding: '4px 12px', border: 'none', borderRadius: '6px',
+                padding: '4px 12px', border: 'none', borderRadius: 'var(--radius-tag)',
                 background: from && to ? 'var(--color-cta-primary)' : 'var(--color-border)',
-                color: from && to ? '#FFFFFF' : 'var(--color-text-secondary)',
+                color: from && to ? 'var(--color-bg-card)' : 'var(--color-text-secondary)',
                 fontSize: '12px', fontWeight: 500, cursor: from && to ? 'pointer' : 'not-allowed',
               }}
             >

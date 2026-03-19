@@ -162,7 +162,7 @@ export default function MultiSelectFilter({
                   width: '100%',
                   padding: '6px 8px',
                   border: '1px solid var(--color-border)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-tag)',
                   fontSize: '13px',
                   background: 'var(--color-bg-card)',
                   outline: 'none',
@@ -196,7 +196,7 @@ export default function MultiSelectFilter({
                 width: '100%',
                 padding: '6px 8px',
                 border: '1px solid var(--color-border)',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-tag)',
                 fontSize: '13px',
                 outline: 'none',
               }}
@@ -248,7 +248,7 @@ export default function MultiSelectFilter({
                 borderColor: value.includes(opt.value) ? 'var(--color-cta-primary)' : 'var(--color-icon-border)',
                 borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: value.includes(opt.value) ? 'var(--color-cta-primary)' : 'transparent',
-                color: '#FFFFFF', fontSize: '11px', flexShrink: 0,
+                color: 'var(--color-bg-card)', fontSize: '11px', flexShrink: 0,
               }}>
                 {value.includes(opt.value) && '\u2713'}
               </span>
@@ -269,7 +269,7 @@ export default function MultiSelectFilter({
                 <span style={{
                   width: '16px', height: '16px', border: '1.5px solid var(--color-cta-primary)',
                   borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'var(--color-cta-primary)', color: '#FFFFFF', fontSize: '11px', flexShrink: 0,
+                  background: 'var(--color-cta-primary)', color: 'var(--color-bg-card)', fontSize: '11px', flexShrink: 0,
                 }}>
                   {'\u2713'}
                 </span>

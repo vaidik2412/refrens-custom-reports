@@ -185,7 +185,7 @@ export default function FilterBar({ filters, setFilter, removeFilter }: FilterBa
             <span
               style={{
                 background: 'var(--color-cta-primary)',
-                color: '#FFFFFF',
+                color: 'var(--color-bg-card)',
                 borderRadius: '10px',
                 padding: '1px 7px',
                 fontSize: '11px',

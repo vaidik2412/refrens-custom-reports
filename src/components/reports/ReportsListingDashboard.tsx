@@ -81,7 +81,8 @@ const pageHeaderStyle: CSSProperties = {
   fontSize: '22px',
   fontWeight: 600,
   color: 'var(--color-text-primary)',
-  letterSpacing: '-0.5px',
+  lineHeight: '32px',
+  letterSpacing: '-0.25px',
   margin: '0 0 20px 0',
 };
 
@@ -89,7 +90,7 @@ const tableContainerStyle: CSSProperties = {
   overflowX: 'auto',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-input)',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
 };
 
 const tableStyle: CSSProperties = {
@@ -100,13 +101,12 @@ const tableStyle: CSSProperties = {
 };
 
 const thStyle: CSSProperties = {
-  padding: '10px 12px',
+  padding: '8px 12px',
   textAlign: 'left',
-  fontWeight: 600,
-  fontSize: '11px',
-  color: 'var(--color-text-secondary)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.5px',
+  fontWeight: 500,
+  fontSize: '14px',
+  color: 'var(--color-text-column)',
+  letterSpacing: '-0.25px',
   borderBottom: '2px solid var(--color-border)',
   whiteSpace: 'nowrap',
   background: 'var(--color-bg-alt)',
@@ -115,7 +115,7 @@ const thStyle: CSSProperties = {
 };
 
 const tdStyle: CSSProperties = {
-  padding: '10px 12px',
+  padding: '8px 12px',
   borderBottom: '1px solid var(--color-border)',
   color: 'var(--color-text-primary)',
 };
@@ -186,7 +186,7 @@ export default function ReportsListingDashboard() {
             textAlign: 'center',
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-input)',
-            background: '#FFFFFF',
+            background: 'var(--color-bg-card)',
           }}
         >
           <div style={{ fontSize: '15px', fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: '4px' }}>
@@ -209,10 +209,10 @@ export default function ReportsListingDashboard() {
           style={{
             marginBottom: '16px',
             padding: '12px 14px',
-            border: '1px solid rgba(214, 78, 67, 0.2)',
+            border: '1px solid var(--color-error-banner-border)',
             borderRadius: 'var(--radius-input)',
-            background: '#FFF6F3',
-            color: '#A33A2F',
+            background: 'var(--color-error-banner-bg)',
+            color: 'var(--color-error-banner-text)',
             fontSize: '13px',
             lineHeight: 1.5,
           }}
@@ -239,15 +239,15 @@ export default function ReportsListingDashboard() {
               <tr
                 key={row.id}
                 style={{
-                  background: idx % 2 === 0 ? '#FFFFFF' : 'var(--color-bg-alt)',
+                  background: idx % 2 === 0 ? 'var(--color-bg-card)' : 'var(--color-bg-alt)',
                   cursor: 'pointer',
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = '#F5F3FF';
+                  (e.currentTarget as HTMLElement).style.background = 'var(--color-row-hover)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.background =
-                    idx % 2 === 0 ? '#FFFFFF' : 'var(--color-bg-alt)';
+                    idx % 2 === 0 ? 'var(--color-bg-card)' : 'var(--color-bg-alt)';
                 }}
                 onClick={() => handleRowClick(row)}
               >

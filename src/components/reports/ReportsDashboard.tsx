@@ -33,7 +33,8 @@ const pageHeaderStyle: CSSProperties = {
   fontSize: '22px',
   fontWeight: 600,
   color: 'var(--color-text-primary)',
-  letterSpacing: '-0.5px',
+  lineHeight: '32px',
+  letterSpacing: '-0.25px',
   margin: 0,
 };
 
@@ -200,10 +201,10 @@ export default function ReportsDashboard() {
           style={{
             marginBottom: '12px',
             padding: '10px 12px',
-            border: '1px solid rgba(214, 78, 67, 0.2)',
+            border: '1px solid var(--color-error-banner-border)',
             borderRadius: 'var(--radius-input)',
-            background: '#FFF6F3',
-            color: '#A33A2F',
+            background: 'var(--color-error-banner-bg)',
+            color: 'var(--color-error-banner-text)',
             fontSize: '13px',
             lineHeight: 1.5,
           }}

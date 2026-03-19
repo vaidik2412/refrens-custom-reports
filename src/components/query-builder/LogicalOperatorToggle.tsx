@@ -10,7 +10,7 @@ interface LogicalOperatorToggleProps {
 
 const containerStyle: CSSProperties = {
   display: 'inline-flex',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-tag)',
   overflow: 'hidden',
   border: '1px solid var(--color-border)',
   fontSize: '11px',
@@ -23,8 +23,8 @@ function pillStyle(active: boolean): CSSProperties {
     padding: '3px 10px',
     cursor: 'pointer',
     border: 'none',
-    background: active ? 'var(--color-cta-primary)' : '#FFFFFF',
-    color: active ? '#FFFFFF' : 'var(--color-text-secondary)',
+    background: active ? 'var(--color-cta-primary)' : 'var(--color-bg-card)',
+    color: active ? 'var(--color-bg-card)' : 'var(--color-text-secondary)',
     transition: 'background 0.15s, color 0.15s',
     fontSize: '11px',
     fontWeight: 600,

@@ -16,7 +16,7 @@ interface ConditionGroupProps {
 const groupContainerStyle: CSSProperties = {
   borderLeft: '3px solid var(--color-cta-primary)',
   borderRadius: 'var(--radius-input)',
-  background: 'var(--color-bg-secondary, #F9FAFB)',
+  background: 'var(--color-bg-secondary)',
   padding: '12px 16px',
   display: 'flex',
   flexDirection: 'column',
@@ -47,7 +47,7 @@ const removeBtnStyle: CSSProperties = {
   background: 'none',
   color: 'var(--color-text-secondary)',
   cursor: 'pointer',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-tag)',
   fontSize: '13px',
   transition: 'background 0.15s, color 0.15s',
   flexShrink: 0,
@@ -116,7 +116,7 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
           style={removeBtnStyle}
           onClick={onRemove}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.08)';
+            (e.currentTarget as HTMLElement).style.background = 'var(--color-error-hover-bg)';
             (e.currentTarget as HTMLElement).style.color = 'var(--color-error)';
           }}
           onMouseLeave={(e) => {

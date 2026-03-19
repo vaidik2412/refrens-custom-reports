@@ -39,11 +39,11 @@ const toggleThumbStyle: CSSProperties = {
   width: '16px',
   height: '16px',
   borderRadius: '50%',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   position: 'absolute',
   top: '2px',
   transition: 'left 0.2s',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+  boxShadow: 'var(--shadow-toggle-thumb)',
 };
 
 export default function BooleanFilter({ label, value, onChange }: BooleanFilterProps) {

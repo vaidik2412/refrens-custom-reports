@@ -18,7 +18,7 @@ interface ValueInputProps {
 
 const inputStyle: CSSProperties = {
   padding: '6px 10px',
-  border: '1px solid rgba(0,0,0,0.15)',
+  border: '1px solid var(--color-border-input)',
   borderRadius: 'var(--radius-input)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
@@ -36,10 +36,10 @@ const selectStyle: CSSProperties = {
 const focusHandlers = {
   onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
     e.target.style.borderColor = 'var(--color-cta-primary)';
-    e.target.style.boxShadow = '0 0 0 3px rgba(79,70,229,0.1)';
+    e.target.style.boxShadow = 'var(--shadow-focus)';
   },
   onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = 'rgba(0,0,0,0.15)';
+    e.target.style.borderColor = 'var(--color-border-input)';
     e.target.style.boxShadow = 'none';
   },
 };
@@ -460,7 +460,7 @@ function TagInput({
 
 const presetSelectStyle: CSSProperties = {
   padding: '6px 10px',
-  border: '1px solid rgba(0,0,0,0.15)',
+  border: '1px solid var(--color-border-input)',
   borderRadius: 'var(--radius-input)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',

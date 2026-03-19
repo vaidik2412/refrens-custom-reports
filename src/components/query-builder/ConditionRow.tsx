@@ -20,7 +20,7 @@ const rowStyle: CSSProperties = {
   alignItems: 'flex-start',
   gap: '8px',
   padding: '10px 12px',
-  background: '#FFFFFF',
+  background: 'var(--color-bg-card)',
   borderRadius: 'var(--radius-input)',
   border: '1px solid var(--color-border)',
 };
@@ -35,7 +35,7 @@ const removeBtnStyle: CSSProperties = {
   background: 'none',
   color: 'var(--color-text-secondary)',
   cursor: 'pointer',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-tag)',
   fontSize: '14px',
   transition: 'background 0.15s, color 0.15s',
   flexShrink: 0,
@@ -114,7 +114,7 @@ export default function ConditionRow({ condition, onUpdate, onRemove, usedFields
         style={removeBtnStyle}
         onClick={() => onRemove(condition.id)}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.08)';
+          (e.currentTarget as HTMLElement).style.background = 'var(--color-error-hover-bg)';
           (e.currentTarget as HTMLElement).style.color = 'var(--color-error)';
         }}
         onMouseLeave={(e) => {
