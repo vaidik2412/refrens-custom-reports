@@ -87,7 +87,7 @@ export interface FilterFieldConfig {
   options?: FilterOption[];
   primary: boolean;
   placeholder?: string;
-  operator?: '$in' | '$all';
+  operator?: '$in' | '$nin' | '$all';
   searchEndpoint?: string;
 }
 

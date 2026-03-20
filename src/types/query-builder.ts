@@ -7,6 +7,7 @@ export type Operator =
   | '$lt'
   | '$lte'
   | '$in'
+  | '$nin'
   | '$all'
   | '$regex'
   | '$between';

@@ -22,6 +22,12 @@ export const INVOICE_LIST_PROJECTION = {
   placeOfSupply: 1,
   einvoiceGeneratedStatus: 1,
   'recurringInvoice.frequency': 1,
+  'billedTo.country': 1,
+  'billedTo.clientType': 1,
+  createdAt: 1,
+  'items.hsn': 1,
+  'payments.paymentMethod': 1,
+  'totals.igst': 1,
 } as const;
 
 const DERIVED_INVOICE_FILTER_KEYS = ['hasLinkedInvoice', 'adjustedCredit', 'hasPayments'] as const;

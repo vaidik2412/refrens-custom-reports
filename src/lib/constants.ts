@@ -92,6 +92,39 @@ export const RECURRING_FREQUENCY_OPTIONS = [
   { label: 'Yearly', value: 'Yearly' },
 ];
 
+export const CLIENT_TYPE_OPTIONS = [
+  { label: 'Individual', value: 'INDIVIDUAL' },
+  { label: 'Business', value: 'BUSINESS' },
+];
+
+export const COUNTRY_OPTIONS = [
+  { label: 'India', value: 'IN' },
+  { label: 'United States', value: 'US' },
+  { label: 'United Kingdom', value: 'GB' },
+  { label: 'United Arab Emirates', value: 'AE' },
+  { label: 'Saudi Arabia', value: 'SA' },
+  { label: 'Singapore', value: 'SG' },
+  { label: 'Malaysia', value: 'MY' },
+  { label: 'Australia', value: 'AU' },
+  { label: 'Canada', value: 'CA' },
+  { label: 'Germany', value: 'DE' },
+];
+
+export const PAYMENT_METHOD_OPTIONS = [
+  { label: 'Account Transfer', value: 'ACCOUNT_TRANSFER' },
+  { label: 'UPI', value: 'UPI' },
+  { label: 'Cash Payment', value: 'CASH' },
+  { label: 'Cheque', value: 'Cheque' },
+  { label: 'Demand Draft', value: 'DD' },
+  { label: 'Credit Card', value: 'CREDIT_CARD' },
+  { label: 'Debit Card', value: 'DEBIT_CARD' },
+  { label: 'Digital Wallet', value: 'WALLET' },
+  { label: 'Prepaid Card', value: 'PREPAID_CARD' },
+  { label: 'Proforma Payment', value: 'PROFORMA_PAYMENT' },
+  { label: 'Other', value: 'OTHER' },
+  { label: 'Payment Receipt', value: 'PAYMENT_RECEIPT' },
+];
+
 export const GST_STATE_OPTIONS = [
   { label: 'Andhra Pradesh', value: '37' },
   { label: 'Delhi', value: '07' },
@@ -277,6 +310,52 @@ export const SECONDARY_FILTERS: FilterFieldConfig[] = [
     label: 'Accounting Synced',
     type: 'boolean',
     primary: false,
+  },
+  {
+    key: 'billedTo.country',
+    label: 'Client Country',
+    type: 'multi-select',
+    options: COUNTRY_OPTIONS,
+    operator: '$nin',
+    primary: false,
+    placeholder: 'All Countries',
+  },
+  {
+    key: 'createdAt',
+    label: 'Created At',
+    type: 'date-range',
+    primary: false,
+  },
+  {
+    key: 'items.hsn',
+    label: 'HSN/SAC Code',
+    type: 'multi-select',
+    operator: '$in',
+    primary: false,
+    placeholder: 'Enter HSN/SAC codes...',
+  },
+  {
+    key: 'payments.paymentMethod',
+    label: 'Payment Method',
+    type: 'multi-select',
+    options: PAYMENT_METHOD_OPTIONS,
+    operator: '$in',
+    primary: false,
+    placeholder: 'All Methods',
+  },
+  {
+    key: 'totals.igst',
+    label: 'Total Tax',
+    type: 'number-range',
+    primary: false,
+  },
+  {
+    key: 'billedTo.clientType',
+    label: 'Client Type',
+    type: 'select',
+    options: CLIENT_TYPE_OPTIONS,
+    primary: false,
+    placeholder: 'All Types',
   },
 ];
 

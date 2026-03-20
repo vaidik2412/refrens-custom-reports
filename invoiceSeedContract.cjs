@@ -81,6 +81,10 @@ const DEFAULT_TOP_LEVEL_ARRAYS = {
   activities: [],
   leadCollaborators: [],
   attachments: [],
+  customFooters: [],
+  resyncHistory: [],
+  cesses: [],
+  terms: [],
 };
 const DEFAULT_ITEM = {
   group: false,
@@ -298,11 +302,41 @@ function normalizeInvoiceDocument(doc) {
     columns: Array.isArray(doc.columns) ? doc.columns : [],
     customLabels: doc.customLabels || {},
     contact: doc.contact || {},
+    // Boolean defaults that Mongoose would auto-set
+    status: doc.status || 'UNPAID',
+    isExpenditure: doc.isExpenditure ?? false,
+    isSharedDocument: doc.isSharedDocument ?? false,
+    isSourceConverted: doc.isSourceConverted ?? false,
+    invoiceAccepted: doc.invoiceAccepted || 'WAITING',
+    taxType: doc.taxType || 'INDIA',
+    source: doc.source || 'DASHBOARD',
+    reverseCharge: doc.reverseCharge ?? false,
+    utgst: doc.utgst ?? false,
+    partialConvert: doc.partialConvert ?? false,
+    hasPgPayments: doc.hasPgPayments ?? false,
+    batchDocument: doc.batchDocument ?? false,
+    tdsReportCollected: doc.tdsReportCollected ?? false,
+    isQuickExpenditure: doc.isQuickExpenditure ?? false,
+    requestedInvoice: doc.requestedInvoice ?? false,
+    isBulkExpenditure: doc.isBulkExpenditure ?? false,
+    showInSuggestion: doc.showInSuggestion ?? false,
     isColumnsModified: doc.isColumnsModified ?? false,
     hideTaxes: doc.hideTaxes ?? false,
     hideTotals: doc.hideTotals ?? false,
     hideTotalInWords: doc.hideTotalInWords ?? false,
     showTotalsRow: doc.showTotalsRow ?? false,
+    // Invoice-level discount default
+    discount: {
+      discountType: 'PERCENTAGE',
+      ...(doc.discount || {}),
+    },
+    // Early pay discount default
+    earlyPayDiscount: {
+      enabled: false,
+      applied: false,
+      discountType: 'PERCENTAGE',
+      ...(doc.earlyPayDiscount || {}),
+    },
     invoiceId:
       doc.invoiceId ||
       (!doc.isExpenditure && ['PROFORMAINV', 'INVOICE'].includes(doc.billType) ? doc._id : undefined),

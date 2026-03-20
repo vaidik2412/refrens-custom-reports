@@ -8,11 +8,15 @@ import {
   SOURCE_OPTIONS,
   RECURRING_FREQUENCY_OPTIONS,
   GST_STATE_OPTIONS,
+  COUNTRY_OPTIONS,
+  CLIENT_TYPE_OPTIONS,
+  PAYMENT_METHOD_OPTIONS,
 } from './constants';
 
 // ── Operator sets by field type (all index-friendly) ────────────────
 
 const ENUM_OPERATORS: Operator[] = ['$eq', '$in'];
+const ENUM_EXCLUDE_OPERATORS: Operator[] = ['$eq', '$in', '$nin'];
 const ENUM_MULTI_OPERATORS: Operator[] = ['$in'];
 const STRING_OPERATORS: Operator[] = ['$eq', '$regex'];
 const NUMBER_OPERATORS: Operator[] = ['$eq', '$gt', '$gte', '$lt', '$lte'];
@@ -255,6 +259,60 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
   // NOTE: 'Created By' (addedBy) removed — the field stores ObjectId references
   // to users, but we have no /api/users/search endpoint yet. Re-add when user
   // search is implemented.
+
+  // ─── New filters (batch 2) ──────────────────────────────────────────
+  {
+    key: 'billedTo.country',
+    label: 'Client Country',
+    fieldType: 'enum',
+    operators: ENUM_EXCLUDE_OPERATORS,
+    defaultOperator: '$in',
+    options: COUNTRY_OPTIONS,
+    category: 'core',
+  },
+  {
+    key: 'createdAt',
+    label: 'Created At',
+    fieldType: 'date',
+    operators: DATE_OPERATORS,
+    defaultOperator: '$between',
+    category: 'metadata',
+  },
+  {
+    key: 'items.hsn',
+    label: 'HSN/SAC Code',
+    fieldType: 'string',
+    operators: ['$eq', '$regex', '$in'] as Operator[],
+    defaultOperator: '$regex',
+    category: 'tax',
+  },
+  {
+    key: 'payments.paymentMethod',
+    label: 'Payment Method',
+    fieldType: 'enum',
+    operators: ENUM_MULTI_OPERATORS,
+    defaultOperator: '$in',
+    options: PAYMENT_METHOD_OPTIONS,
+    category: 'financial',
+    billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER'],
+  },
+  {
+    key: 'totals.igst',
+    label: 'Total Tax',
+    fieldType: 'number',
+    operators: NUMBER_OPERATORS,
+    defaultOperator: '$gte',
+    category: 'financial',
+  },
+  {
+    key: 'billedTo.clientType',
+    label: 'Client Type',
+    fieldType: 'enum',
+    operators: ENUM_OPERATORS,
+    defaultOperator: '$eq',
+    options: CLIENT_TYPE_OPTIONS,
+    category: 'core',
+  },
 ];
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -286,6 +344,7 @@ export const OPERATOR_LABELS: Record<string, string> = {
   $lt: 'less than',
   $lte: 'at most',
   $in: 'is any of',
+  $nin: 'is not any of',
   $all: 'has all of',
   $regex: 'contains',
   $between: 'is between',
