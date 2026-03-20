@@ -100,18 +100,29 @@ for (let i = 0; i < 5; i++) {
       name: 'Tech Solutions Pvt Ltd',
       country: 'IN',
       state: 'KARNATAKA',
+      gstState: '29', // Karnataka
       gstin: '29ABCDE1234F1Z5',
-      city: 'Bangalore'
+      panNumber: 'ABCDE1234F',
+      city: 'Bangalore',
+      phone: '+919876543210',
+      email: 'billing@techsolutions.in',
+      clientType: 'BUSINESS',
+      additionalIds: [{ label: 'CIN', value: 'U72200KA2018PTC123456', showInInvoice: true, useForEInvoice: false }]
     },
     billedTo: {
       name: 'Alpha Corp',
       country: 'IN',
       state: 'MAHARASHTRA',
+      gstState: '27', // Maharashtra
       gstin: '27ZYXWV9876Q1Z9',
+      panNumber: 'ZYXWV9876Q',
       city: 'Mumbai',
-      email: 'finance@alphacorp.in'
+      email: 'finance@alphacorp.in',
+      phone: '+919123456789',
+      clientType: 'BUSINESS'
     },
     tags: ['Q3-Services', 'Retainer'],
+    placeOfSupply: '27', // Maharashtra (billedTo state)
     igst: true, // inter-state: KARNATAKA → MAHARASHTRA
     irn: {
       irn: `a1b2c3d4e5f6g7h8i9j0_${i}`,
@@ -853,6 +864,7 @@ for (let i = 0; i < 5; i++) {
     ...getBaseInvoice(i, 'EXP-SC10', clientIds.gammaStartups),
     isExpenditure: true,
     billType: 'INVOICE',
+    expenseNumber: `EXP-${100 + i}`,
     business: vendorIds.desertSupply,
     clientProfile: clientIds.gammaStartups,
     owner: clientIds.gammaStartups,
@@ -929,6 +941,7 @@ for (let i = 0; i < 5; i++) {
   documents.push({
     ...getBaseInvoice(i, 'QT-SC11', vendorIds.techPvtLtd),
     billType: 'QUOTATION',
+    quotationStatus: 'OPEN',
     business: vendorIds.techPvtLtd,
     clientProfile: clientIds.alphaCorp,
     status: 'DRAFT',
@@ -976,7 +989,7 @@ for (let i = 0; i < 5; i++) {
       discount: 0,
       total: sc11Total
     },
-    balance: { due: sc11Total, received: 0 }
+    balance: { due: sc11Total, paid: 0 }
   });
 
   // ──────────────────────────────────────────────────────────────────────
@@ -1037,7 +1050,7 @@ for (let i = 0; i < 5; i++) {
       discount: 0,
       total: sc12Total
     },
-    balance: { due: 0, received: sc12Total },
+    balance: { due: 0, paid: sc12Total },
     payments: [
       {
         _id: new ObjectId(),
@@ -1115,7 +1128,7 @@ for (let i = 0; i < 5; i++) {
       discount: 0,
       total: sc13Total
     },
-    balance: { due: sc13Total, received: 0 }
+    balance: { due: sc13Total, paid: 0 }
   });
 
   // ──────────────────────────────────────────────────────────────────────
@@ -1174,7 +1187,7 @@ for (let i = 0; i < 5; i++) {
       discount: 0,
       total: sc14Total
     },
-    balance: { due: sc14Total, received: 0 }
+    balance: { due: sc14Total, paid: 0 }
   });
 
   // ──────────────────────────────────────────────────────────────────────
@@ -1240,7 +1253,7 @@ for (let i = 0; i < 5; i++) {
       discount: 0,
       total: sc15Total
     },
-    balance: { due: sc15Total, received: 0 }
+    balance: { due: sc15Total, paid: 0 }
   });
 
   // ──────────────────────────────────────────────────────────────────────
@@ -1301,7 +1314,7 @@ for (let i = 0; i < 5; i++) {
       discount: 0,
       total: sc16Total
     },
-    balance: { due: sc16Total - sc16Paid, received: sc16Paid },
+    balance: { due: sc16Total - sc16Paid, paid: sc16Paid },
     payments: [
       {
         _id: new ObjectId(),
@@ -1375,7 +1388,7 @@ for (let i = 0; i < 5; i++) {
       discount: 0,
       total: sc17Total
     },
-    balance: { due: sc17Total, received: 0 }
+    balance: { due: sc17Total, paid: 0 }
   });
 
   // ──────────────────────────────────────────────────────────────────────
@@ -1437,7 +1450,7 @@ for (let i = 0; i < 5; i++) {
       discount: 0,
       total: sc18Total
     },
-    balance: { due: sc18Total, received: 0 }
+    balance: { due: sc18Total, paid: 0 }
   });
 
   // ──────────────────────────────────────────────────────────────────────
@@ -1502,7 +1515,7 @@ for (let i = 0; i < 5; i++) {
       discount: 0,
       total: sc19Sub
     },
-    balance: { due: sc19Sub, received: 0 }
+    balance: { due: sc19Sub, paid: 0 }
   });
 
   // ──────────────────────────────────────────────────────────────────────
@@ -1566,7 +1579,7 @@ for (let i = 0; i < 5; i++) {
       discount: 0,
       total: sc20Total
     },
-    balance: { due: 0, received: sc20Total },
+    balance: { due: 0, paid: sc20Total },
     linkedDocuments: [new ObjectId()],
     documentReason: 'Damaged goods received — partial lot return'
   });

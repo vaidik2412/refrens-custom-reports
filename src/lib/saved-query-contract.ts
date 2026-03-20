@@ -1,7 +1,7 @@
 import type { DateFieldConfig } from '@/types';
 import { resolveDateField } from './date-utils';
 
-export const DATE_FILTER_ACCESSORS = ['invoiceDate', 'dueDate', 'lastPaymentDate'] as const;
+export const DATE_FILTER_ACCESSORS = ['invoiceDate', 'dueDate', 'lastPaymentDate', 'createdAt'] as const;
 
 type DateAccessor = (typeof DATE_FILTER_ACCESSORS)[number];
 

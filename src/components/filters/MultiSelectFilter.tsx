@@ -11,9 +11,9 @@ interface MultiSelectFilterProps {
   placeholder?: string;
   allowFreeText?: boolean;
   searchEndpoint?: string;
-  operator?: '$in' | '$all';
-  operatorOptions?: Array<{ label: string; value: '$in' | '$all' }>;
-  onOperatorChange?: (operator: '$in' | '$all') => void;
+  operator?: '$in' | '$nin' | '$all';
+  operatorOptions?: Array<{ label: string; value: '$in' | '$nin' | '$all' }>;
+  onOperatorChange?: (operator: '$in' | '$nin' | '$all') => void;
 }
 
 const triggerStyle: CSSProperties = {

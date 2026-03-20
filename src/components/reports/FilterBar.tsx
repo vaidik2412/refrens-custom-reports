@@ -77,7 +77,7 @@ function renderFilter(
     case 'multi-select': {
       const operator =
         typeof val === 'object' && val !== null
-          ? ('$all' in val ? '$all' : '$in' in val ? '$in' : config.operator || '$in')
+          ? ('$all' in val ? '$all' : '$nin' in val ? '$nin' : '$in' in val ? '$in' : config.operator || '$in')
           : config.operator || '$in';
       const operatorOptions =
         config.key === 'tags'
@@ -91,7 +91,7 @@ function renderFilter(
         <MultiSelectFilter
           key={config.key}
           label={config.label}
-          value={val?.[operator] || val || []}
+          value={val?.[operator] || val?.$nin || val || []}
           options={config.options}
           onChange={(v) =>
             v.length > 0 || shouldPersistEmptySelection
@@ -104,7 +104,7 @@ function renderFilter(
           operator={operator}
           operatorOptions={operatorOptions}
           onOperatorChange={(nextOperator) => {
-            const selectedValues = val?.$all || val?.$in || [];
+            const selectedValues = val?.$all || val?.$nin || val?.$in || [];
             setFilter(config.key, { [nextOperator]: selectedValues });
           }}
         />

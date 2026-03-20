@@ -76,12 +76,13 @@ const presetSelectStyle: CSSProperties = {
   marginTop: '8px',
 };
 
-const DATE_FILTER_KEYS = ['invoiceDate', 'dueDate', 'lastPaymentDate'];
+const DATE_FILTER_KEYS = ['invoiceDate', 'dueDate', 'lastPaymentDate', 'createdAt'];
 
 const DATE_FIELD_LABELS: Record<string, string> = {
   invoiceDate: 'Invoice Date',
   dueDate: 'Due Date',
   lastPaymentDate: 'Last Payment Date',
+  createdAt: 'Created At',
 };
 
 export default function SaveReportModal({
