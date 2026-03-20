@@ -40,6 +40,9 @@ const titleStyle: CSSProperties = {
 };
 
 const backLinkStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '6px',
   fontSize: '13px',
   color: 'var(--color-cta-primary)',
   cursor: 'pointer',
@@ -52,18 +55,19 @@ const backLinkStyle: CSSProperties = {
 
 const sectionStyle: CSSProperties = {
   background: 'var(--color-bg-card)',
-  border: '1px solid var(--color-border)',
+  border: '1px solid var(--color-border-strong)',
   borderRadius: 'var(--radius-card)',
-  padding: '20px',
+  padding: '24px',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
 };
 
 const sectionTitleStyle: CSSProperties = {
-  fontSize: '16px',
+  fontSize: '18px',
   fontWeight: 600,
   color: 'var(--color-text-primary)',
-  lineHeight: '24px',
+  lineHeight: '28px',
   letterSpacing: '-0.25px',
-  margin: '0 0 12px 0',
+  margin: '0 0 16px 0',
 };
 
 const disabledOverlayStyle: CSSProperties = {
@@ -75,7 +79,10 @@ const previewHeaderStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  marginBottom: '12px',
+  gap: '12px',
+  marginBottom: '16px',
+  paddingBottom: '12px',
+  borderBottom: '1px solid var(--color-border)',
 };
 
 const resultCountStyle: CSSProperties = {
@@ -90,7 +97,7 @@ const footerStyle: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'flex-end',
   gap: '8px',
-  paddingTop: '8px',
+  paddingTop: '16px',
   borderTop: '1px solid var(--color-border)',
 };
 

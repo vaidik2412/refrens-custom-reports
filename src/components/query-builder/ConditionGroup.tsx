@@ -15,13 +15,13 @@ interface ConditionGroupProps {
 }
 
 const groupContainerStyle: CSSProperties = {
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: 'var(--radius-card)',
   background: 'var(--color-bg-secondary)',
-  padding: '12px 16px',
+  padding: '16px',
   display: 'flex',
   flexDirection: 'column',
-  gap: '8px',
+  gap: '12px',
 };
 
 const groupHeaderStyle: CSSProperties = {
@@ -31,7 +31,7 @@ const groupHeaderStyle: CSSProperties = {
 };
 
 const groupLabelStyle: CSSProperties = {
-  fontSize: '12px',
+  fontSize: '11px',
   fontWeight: 600,
   color: 'var(--color-text-secondary)',
   textTransform: 'uppercase',
@@ -42,23 +42,25 @@ const removeBtnStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '24px',
-  height: '24px',
-  border: 'none',
-  background: 'none',
+  width: '32px',
+  height: '32px',
+  border: '1px solid transparent',
+  background: 'transparent',
   color: 'var(--color-text-secondary)',
   cursor: 'pointer',
-  borderRadius: 'var(--radius-tag)',
-  fontSize: '13px',
-  transition: 'background 0.15s, color 0.15s',
+  borderRadius: 'var(--radius-input)',
+  fontSize: '12px',
+  lineHeight: 1,
+  transition: 'background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease',
   flexShrink: 0,
 };
 
 const emptyStyle: CSSProperties = {
-  padding: '16px',
+  padding: '20px',
   textAlign: 'center',
-  border: '1px dashed var(--color-border)',
+  border: '1px dashed var(--color-border-subtle)',
   borderRadius: 'var(--radius-input)',
+  background: 'var(--color-bg-card)',
   color: 'var(--color-text-secondary)',
   fontSize: '13px',
 };
@@ -124,10 +126,12 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
           onClick={onRemove}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.background = 'var(--color-error-hover-bg)';
+            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239, 68, 68, 0.2)';
             (e.currentTarget as HTMLElement).style.color = 'var(--color-error)';
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'none';
+            (e.currentTarget as HTMLElement).style.background = 'transparent';
+            (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
             (e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)';
           }}
           aria-label="Remove group"
@@ -179,8 +183,15 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
                 gap: '10px',
                 padding: '2px 0',
               }}>
-                <div style={{ flex: 1, borderTop: '1px solid var(--color-border)' }} />
+                <div style={{ flex: 1, borderTop: '1px solid var(--color-border-subtle)' }} />
                 <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-tag)',
+                  border: '1px solid var(--color-chip-border)',
+                  background: 'var(--color-chip-bg)',
                   fontSize: '10px',
                   fontWeight: 600,
                   color: 'var(--color-chip-text)',
@@ -190,7 +201,7 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
                 }}>
                   {group.logicalOperator}
                 </span>
-                <div style={{ flex: 1, borderTop: '1px solid var(--color-border)' }} />
+                <div style={{ flex: 1, borderTop: '1px solid var(--color-border-subtle)' }} />
               </div>
             )}
             <ConditionRow

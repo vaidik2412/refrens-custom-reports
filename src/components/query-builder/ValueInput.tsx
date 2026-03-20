@@ -17,33 +17,101 @@ interface ValueInputProps {
 }
 
 const inputStyle: CSSProperties = {
-  padding: '6px 10px',
-  borderWidth: '1px',
-  borderStyle: 'solid',
-  borderColor: 'var(--color-border)',
+  minHeight: 'var(--height-input)',
+  padding: '8px 12px',
+  border: '1px solid var(--color-border-input)',
   borderRadius: 'var(--radius-input)',
   fontSize: '13px',
+  lineHeight: '20px',
   color: 'var(--color-text-primary)',
   outline: 'none',
   letterSpacing: '-0.25px',
   minWidth: '140px',
-  height: '34px',
+  background: 'var(--color-bg-card)',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
+  transition: 'border-color 0.16s ease, box-shadow 0.16s ease',
 };
 
 const selectStyle: CSSProperties = {
   ...inputStyle,
-  background: 'var(--color-bg-card)',
   cursor: 'pointer',
+};
+
+const popoverStyle: CSSProperties = {
+  position: 'absolute',
+  top: 'calc(100% + 6px)',
+  left: 0,
+  right: 0,
+  background: 'var(--color-bg-card)',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: '12px',
+  boxShadow: 'var(--shadow-popover)',
+  zIndex: 40,
+  maxHeight: '240px',
+  overflowY: 'auto',
+  padding: '8px 0',
+};
+
+const menuSectionLabelStyle: CSSProperties = {
+  padding: '0 12px 8px',
+  fontSize: '11px',
+  fontWeight: 600,
+  color: 'var(--color-text-secondary)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+};
+
+const menuItemStyle: CSSProperties = {
+  display: 'block',
+  width: '100%',
+  padding: '9px 12px',
+  fontSize: '13px',
+  lineHeight: '20px',
+  border: 'none',
+  background: 'transparent',
+  textAlign: 'left',
+  cursor: 'pointer',
+  letterSpacing: '-0.25px',
+  color: 'var(--color-text-primary)',
+};
+
+const tokenFieldStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: '6px',
+  width: '100%',
+  minHeight: 'var(--height-input)',
+  padding: '6px',
+  border: '1px solid var(--color-border-input)',
+  borderRadius: 'var(--radius-input)',
+  background: 'var(--color-bg-card)',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
+  transition: 'border-color 0.16s ease, box-shadow 0.16s ease',
+};
+
+const tokenFieldInputStyle: CSSProperties = {
+  flex: '1 1 120px',
+  minWidth: '120px',
+  minHeight: '28px',
+  padding: '0 6px',
+  border: 'none',
+  outline: 'none',
+  fontSize: '13px',
+  lineHeight: '20px',
+  color: 'var(--color-text-primary)',
+  letterSpacing: '-0.25px',
+  background: 'transparent',
 };
 
 const focusHandlers = {
   onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = 'var(--color-cta-primary)';
+    e.target.style.borderColor = 'var(--color-border-input-focus)';
     e.target.style.boxShadow = 'var(--shadow-focus)';
   },
   onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = 'var(--color-border)';
-    e.target.style.boxShadow = 'none';
+    e.target.style.borderColor = 'var(--color-border-input)';
+    e.target.style.boxShadow = '0 1px 2px rgba(20, 28, 39, 0.04)';
   },
 };
 
@@ -87,15 +155,11 @@ function MultiSelectDropdown({
         role="button"
         tabIndex={0}
         style={{
-          ...selectStyle,
-          height: 'auto',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          flexWrap: 'wrap',
-          minHeight: '34px',
+          ...tokenFieldStyle,
           width: '100%',
-          borderColor: open ? 'var(--color-cta-primary)' : undefined,
+          borderColor: open ? 'var(--color-border-input-focus)' : 'var(--color-border-input)',
+          boxShadow: open ? 'var(--shadow-focus)' : tokenFieldStyle.boxShadow,
+          cursor: 'pointer',
           textAlign: 'left',
         }}
         onClick={() => setOpen(!open)}
@@ -118,25 +182,10 @@ function MultiSelectDropdown({
             />
           );
         })}
-        <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginLeft: 'auto', flexShrink: 0 }}>&#8964;</span>
+        <span style={{ fontSize: '10px', color: 'var(--color-icon-muted)', marginLeft: 'auto', flexShrink: 0 }}>&#x25BE;</span>
       </div>
       {open && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 4px)',
-            left: 0,
-            background: 'var(--color-bg-card)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-input)',
-            boxShadow: 'var(--shadow-l1)',
-            zIndex: 40,
-            minWidth: '200px',
-            maxHeight: '240px',
-            overflowY: 'auto',
-            padding: '4px 0',
-          }}
-        >
+        <div style={{ ...popoverStyle, minWidth: '220px' }}>
           {options.map((opt) => (
             <label
               key={opt.value}
@@ -144,16 +193,21 @@ function MultiSelectDropdown({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '6px 12px',
+                padding: '9px 12px',
                 fontSize: '13px',
                 cursor: 'pointer',
                 letterSpacing: '-0.25px',
+                background: value.includes(opt.value) ? 'var(--color-menu-selected)' : 'transparent',
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)';
+                (e.currentTarget as HTMLElement).style.background = value.includes(opt.value)
+                  ? 'var(--color-menu-selected)'
+                  : 'var(--color-menu-hover)';
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'none';
+                (e.currentTarget as HTMLElement).style.background = value.includes(opt.value)
+                  ? 'var(--color-menu-selected)'
+                  : 'transparent';
               }}
             >
               <input
@@ -224,8 +278,14 @@ function SearchSelectInput({
   };
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-flex', flexDirection: 'column', gap: '4px' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+    <div ref={ref} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+      <div
+        style={{
+          ...tokenFieldStyle,
+          borderColor: open ? 'var(--color-border-input-focus)' : 'var(--color-border-input)',
+          boxShadow: open ? 'var(--shadow-focus)' : tokenFieldStyle.boxShadow,
+        }}
+      >
         {value.map((v) => (
           <Pill key={v} label={knownOptions[v] || v} onRemove={() => removeValue(v)} variant="brand" />
         ))}
@@ -238,29 +298,13 @@ function SearchSelectInput({
           }}
           onFocus={() => setOpen(true)}
           placeholder={value.length > 0 ? 'Search or browse more...' : 'Search or browse clients...'}
-          style={{ ...inputStyle, minWidth: '120px', flex: '1 1 auto' }}
+          style={tokenFieldInputStyle}
         />
       </div>
       {open && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 4px)',
-            left: 0,
-            right: 0,
-            background: 'var(--color-bg-card)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-input)',
-            boxShadow: 'var(--shadow-l1)',
-            zIndex: 40,
-            maxHeight: '200px',
-            overflowY: 'auto',
-            padding: '4px 0',
-            minWidth: '200px',
-          }}
-        >
+        <div style={{ ...popoverStyle, minWidth: '220px', maxHeight: '220px' }}>
           {query.trim() === '' && !loading && results.length > 0 && (
-            <div style={{ padding: '8px 12px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={menuSectionLabelStyle}>
               Suggested clients
             </div>
           )}
@@ -279,23 +323,19 @@ function SearchSelectInput({
               key={r.value}
               type="button"
               style={{
-                display: 'block',
-                width: '100%',
-                padding: '6px 12px',
-                fontSize: '13px',
-                border: 'none',
-                background: value.includes(r.value) ? 'var(--color-bg-alt)' : 'none',
-                textAlign: 'left',
-                cursor: 'pointer',
-                letterSpacing: '-0.25px',
+                ...menuItemStyle,
+                background: value.includes(r.value) ? 'var(--color-menu-selected)' : 'transparent',
               }}
+              onMouseDown={(e) => e.preventDefault()}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)';
+                (e.currentTarget as HTMLElement).style.background = value.includes(r.value)
+                  ? 'var(--color-menu-selected)'
+                  : 'var(--color-menu-hover)';
               }}
               onMouseLeave={(e) => {
-                if (!value.includes(r.value)) {
-                  (e.currentTarget as HTMLElement).style.background = 'none';
-                }
+                (e.currentTarget as HTMLElement).style.background = value.includes(r.value)
+                  ? 'var(--color-menu-selected)'
+                  : 'transparent';
               }}
               onClick={() => addValue(r)}
             >
@@ -360,8 +400,14 @@ function TagInput({
     !results.some((result) => result.value.toLowerCase() === pendingTag.toLowerCase());
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+    <div ref={ref} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+      <div
+        style={{
+          ...tokenFieldStyle,
+          borderColor: open ? 'var(--color-border-input-focus)' : 'var(--color-border-input)',
+          boxShadow: open ? 'var(--shadow-focus)' : tokenFieldStyle.boxShadow,
+        }}
+      >
         {value.map((v) => (
           <Pill key={v} label={v} onRemove={() => onChange(value.filter((t) => t !== v))} variant="brand" />
         ))}
@@ -381,29 +427,13 @@ function TagInput({
           }}
           onBlur={handleInputBlur}
           placeholder={value.length > 0 ? 'Search or add more tags...' : 'Search or add tags...'}
-          style={{ ...inputStyle, minWidth: '120px', flex: '1 1 auto' }}
+          style={tokenFieldInputStyle}
         />
       </div>
       {open && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 4px)',
-            left: 0,
-            right: 0,
-            background: 'var(--color-bg-card)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-input)',
-            boxShadow: 'var(--shadow-l1)',
-            zIndex: 40,
-            maxHeight: '220px',
-            overflowY: 'auto',
-            padding: '4px 0',
-            minWidth: '220px',
-          }}
-        >
+        <div style={{ ...popoverStyle, minWidth: '220px', maxHeight: '240px' }}>
           {input.trim() === '' && !loading && results.length > 0 && (
-            <div style={{ padding: '8px 12px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={menuSectionLabelStyle}>
               Suggested tags
             </div>
           )}
@@ -411,18 +441,17 @@ function TagInput({
             <button
               type="button"
               style={{
-                display: 'block',
-                width: '100%',
-                padding: '6px 12px',
-                fontSize: '13px',
-                border: 'none',
-                background: 'none',
-                textAlign: 'left',
-                cursor: 'pointer',
+                ...menuItemStyle,
                 fontStyle: 'italic',
-                letterSpacing: '-0.25px',
+                color: 'var(--color-text-secondary)',
               }}
               onMouseDown={(e) => e.preventDefault()}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'var(--color-menu-hover)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'transparent';
+              }}
               onClick={() => addTag(pendingTag)}
             >
               Add &ldquo;{pendingTag}&rdquo;
@@ -443,24 +472,19 @@ function TagInput({
               key={result.value}
               type="button"
               style={{
-                display: 'block',
-                width: '100%',
-                padding: '6px 12px',
-                fontSize: '13px',
-                border: 'none',
-                background: value.includes(result.value) ? 'var(--color-bg-alt)' : 'none',
-                textAlign: 'left',
-                cursor: 'pointer',
-                letterSpacing: '-0.25px',
+                ...menuItemStyle,
+                background: value.includes(result.value) ? 'var(--color-menu-selected)' : 'transparent',
               }}
               onMouseDown={(e) => e.preventDefault()}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)';
+                (e.currentTarget as HTMLElement).style.background = value.includes(result.value)
+                  ? 'var(--color-menu-selected)'
+                  : 'var(--color-menu-hover)';
               }}
               onMouseLeave={(e) => {
-                if (!value.includes(result.value)) {
-                  (e.currentTarget as HTMLElement).style.background = 'none';
-                }
+                (e.currentTarget as HTMLElement).style.background = value.includes(result.value)
+                  ? 'var(--color-menu-selected)'
+                  : 'transparent';
               }}
               onClick={() => addTag(result.value)}
             >
@@ -476,23 +500,18 @@ function TagInput({
 // ── Date Between with Fixed/Dynamic toggle ──────────────────────────
 
 const presetSelectStyle: CSSProperties = {
-  padding: '6px 10px',
-  borderWidth: '1px',
-  borderStyle: 'solid',
-  borderColor: 'var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  fontSize: '13px',
-  color: 'var(--color-text-primary)',
-  background: 'var(--color-bg-card)',
-  outline: 'none',
-  cursor: 'pointer',
+  ...selectStyle,
+  width: '100%',
 };
 
 const helperTextStyle: CSSProperties = {
   fontSize: '12px',
   color: 'var(--color-text-secondary)',
   letterSpacing: '-0.25px',
-  marginTop: '6px',
+  padding: '8px 10px',
+  borderRadius: 'var(--radius-input)',
+  border: '1px solid var(--color-border-subtle)',
+  background: 'var(--color-bg-secondary)',
 };
 
 function DateBetweenInput({
@@ -567,7 +586,7 @@ function DateBetweenInput({
   if (mode === 'fixed') {
     const rangeVal = (value || {}) as { from?: string; to?: string };
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <RadioGroup
           options={[
             { label: 'Fixed', value: 'fixed' },
@@ -576,12 +595,12 @@ function DateBetweenInput({
           value="fixed"
           onChange={handleModeChange}
         />
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
           <input
             type="date"
             value={rangeVal.from || ''}
             onChange={(e) => onChange({ ...rangeVal, from: e.target.value })}
-            style={{ ...inputStyle, width: '150px' }}
+            style={{ ...inputStyle, width: '180px' }}
             {...focusHandlers}
           />
           <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', flexShrink: 0 }}>to</span>
@@ -589,7 +608,7 @@ function DateBetweenInput({
             type="date"
             value={rangeVal.to || ''}
             onChange={(e) => onChange({ ...rangeVal, to: e.target.value })}
-            style={{ ...inputStyle, width: '150px' }}
+            style={{ ...inputStyle, width: '180px' }}
             {...focusHandlers}
           />
         </div>
@@ -599,7 +618,7 @@ function DateBetweenInput({
 
   // Dynamic mode
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <RadioGroup
         options={[
           { label: 'Fixed', value: 'fixed' },
@@ -611,7 +630,7 @@ function DateBetweenInput({
       <select
         value={value.preset || 'this_month'}
         onChange={(e) => handlePresetChange(e.target.value as DynamicPreset)}
-        style={{ ...presetSelectStyle, width: '220px' }}
+        style={{ ...presetSelectStyle, maxWidth: '260px' }}
         {...focusHandlers}
       >
         {PRESET_GROUPS.map((group) => (
@@ -626,13 +645,13 @@ function DateBetweenInput({
       </select>
 
       {value.preset === 'custom_period' && (
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
           <select
             value={customDirection}
             onChange={(e) =>
               onChange({ ...value, direction: e.target.value })
             }
-            style={{ ...presetSelectStyle, width: 'auto' }}
+            style={{ ...presetSelectStyle, width: '120px' }}
           >
             <option value="this">Last</option>
             <option value="next">Next</option>
@@ -646,7 +665,7 @@ function DateBetweenInput({
             }
             style={{
               ...inputStyle,
-              width: '64px',
+              width: '80px',
               textAlign: 'center',
             }}
           />
@@ -655,7 +674,7 @@ function DateBetweenInput({
             onChange={(e) =>
               onChange({ ...value, unit: e.target.value })
             }
-            style={{ ...presetSelectStyle, width: 'auto' }}
+            style={{ ...presetSelectStyle, width: '120px' }}
           >
             <option value="days">Days</option>
             <option value="weeks">Weeks</option>
@@ -750,7 +769,7 @@ function DateSingleInput({
 
   if (mode === 'fixed') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <RadioGroup
           options={[
             { label: 'Fixed', value: 'fixed' },
@@ -763,7 +782,7 @@ function DateSingleInput({
           type="date"
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange(e.target.value)}
-          style={{ ...inputStyle, width: '160px' }}
+          style={{ ...inputStyle, width: '180px' }}
           {...focusHandlers}
         />
       </div>
@@ -772,7 +791,7 @@ function DateSingleInput({
 
   // Dynamic mode
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <RadioGroup
         options={[
           { label: 'Fixed', value: 'fixed' },
@@ -784,7 +803,7 @@ function DateSingleInput({
       <select
         value={value.preset || 'today'}
         onChange={(e) => handlePresetChange(e.target.value as DynamicPreset)}
-        style={{ ...presetSelectStyle, width: '220px' }}
+        style={{ ...presetSelectStyle, maxWidth: '260px' }}
         {...focusHandlers}
       >
         {PRESET_GROUPS.map((group) => (
@@ -799,13 +818,13 @@ function DateSingleInput({
       </select>
 
       {value.preset === 'custom_period' && (
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
           <select
             value={customDirection}
             onChange={(e) =>
               onChange({ ...value, direction: e.target.value })
             }
-            style={{ ...presetSelectStyle, width: 'auto' }}
+            style={{ ...presetSelectStyle, width: '120px' }}
           >
             <option value="this">Last</option>
             <option value="next">Next</option>
@@ -819,7 +838,7 @@ function DateSingleInput({
             }
             style={{
               ...inputStyle,
-              width: '64px',
+              width: '80px',
               textAlign: 'center',
             }}
           />
@@ -828,7 +847,7 @@ function DateSingleInput({
             onChange={(e) =>
               onChange({ ...value, unit: e.target.value })
             }
-            style={{ ...presetSelectStyle, width: 'auto' }}
+            style={{ ...presetSelectStyle, width: '120px' }}
           >
             <option value="days">Days</option>
             <option value="weeks">Weeks</option>
@@ -880,7 +899,7 @@ export default function ValueInput({ fieldKey, operator, value, onChange }: Valu
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        style={selectStyle}
+        style={{ ...selectStyle, width: '100%' }}
         {...focusHandlers}
       >
         <option value="">Select...</option>
@@ -916,7 +935,7 @@ export default function ValueInput({ fieldKey, operator, value, onChange }: Valu
           onChange(v === '' ? '' : Number(v));
         }}
         placeholder="Enter value..."
-        style={{ ...inputStyle, width: '140px' }}
+        style={{ ...inputStyle, width: '100%' }}
         {...focusHandlers}
       />
     );
@@ -935,7 +954,7 @@ export default function ValueInput({ fieldKey, operator, value, onChange }: Valu
         type="date"
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        style={{ ...inputStyle, width: '160px' }}
+        style={{ ...inputStyle, width: '180px' }}
         {...focusHandlers}
       />
     );
@@ -948,7 +967,7 @@ export default function ValueInput({ fieldKey, operator, value, onChange }: Valu
       value={value || ''}
       onChange={(e) => onChange(e.target.value)}
       placeholder={operator === '$regex' ? 'Contains...' : 'Enter value...'}
-      style={{ ...inputStyle, width: '180px' }}
+      style={{ ...inputStyle, width: '100%' }}
       {...focusHandlers}
     />
   );

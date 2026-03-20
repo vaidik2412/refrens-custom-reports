@@ -13,52 +13,56 @@ interface FieldPickerProps {
 const triggerStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  padding: '6px 10px',
-  borderWidth: '1px',
-  borderStyle: 'solid',
-  borderColor: 'var(--color-border)',
+  justifyContent: 'space-between',
+  gap: '8px',
+  minHeight: 'var(--height-input)',
+  padding: '0 12px',
+  border: '1px solid var(--color-border-input)',
   borderRadius: 'var(--radius-input)',
   background: 'var(--color-bg-card)',
   fontSize: '13px',
+  lineHeight: '20px',
   fontWeight: 400,
   color: 'var(--color-text-primary)',
   cursor: 'pointer',
-  minWidth: '160px',
-  height: '34px',
+  minWidth: '180px',
   letterSpacing: '-0.25px',
-  transition: 'border-color 0.15s',
-  justifyContent: 'space-between',
-  gap: '6px',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
+  transition: 'border-color 0.16s ease, box-shadow 0.16s ease',
 };
 
 const menuStyle: CSSProperties = {
   position: 'absolute',
-  top: 'calc(100% + 4px)',
+  top: 'calc(100% + 6px)',
   left: 0,
   background: 'var(--color-bg-card)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  boxShadow: 'var(--shadow-l1)',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: '12px',
+  boxShadow: 'var(--shadow-popover)',
   zIndex: 40,
-  minWidth: '220px',
+  minWidth: '260px',
   maxHeight: '320px',
   display: 'flex',
   flexDirection: 'column',
+  overflow: 'hidden',
 };
 
 const searchInputStyle: CSSProperties = {
+  width: '100%',
+  minHeight: 'var(--height-input)',
   padding: '8px 12px',
-  border: 'none',
-  borderBottom: '1px solid var(--color-border)',
+  border: '1px solid var(--color-border-input)',
+  borderRadius: 'var(--radius-input)',
   fontSize: '13px',
+  lineHeight: '20px',
   color: 'var(--color-text-primary)',
   outline: 'none',
   letterSpacing: '-0.25px',
-  background: 'transparent',
+  background: 'var(--color-bg-card)',
 };
 
 const categoryStyle: CSSProperties = {
-  padding: '6px 12px 4px',
+  padding: '0 12px 8px',
   fontSize: '11px',
   fontWeight: 600,
   color: 'var(--color-text-secondary)',
@@ -69,8 +73,9 @@ const categoryStyle: CSSProperties = {
 const itemStyle: CSSProperties = {
   display: 'block',
   width: '100%',
-  padding: '7px 12px',
+  padding: '9px 12px',
   fontSize: '13px',
+  lineHeight: '20px',
   fontWeight: 400,
   color: 'var(--color-text-primary)',
   cursor: 'pointer',
@@ -135,29 +140,32 @@ export default function FieldPicker({ value, onChange, usedFields, billType }: F
           ...triggerStyle,
           width: '100%',
           color: value ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-          borderColor: open ? 'var(--color-cta-primary)' : undefined,
+          borderColor: open ? 'var(--color-border-input-focus)' : 'var(--color-border-input)',
+          boxShadow: open ? 'var(--shadow-focus)' : triggerStyle.boxShadow,
         }}
         onClick={() => setOpen(!open)}
       >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {selectedLabel}
         </span>
-        <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>&#8964;</span>
+        <span style={{ fontSize: '10px', color: 'var(--color-icon-muted)' }}>&#x25BE;</span>
       </button>
 
       {open && (
         <div style={menuStyle}>
-          <input
-            ref={searchRef}
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search fields..."
-            style={searchInputStyle}
-          />
-          <div style={{ overflowY: 'auto', padding: '4px 0' }}>
+          <div style={{ padding: '12px 12px 8px' }}>
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search fields..."
+              style={searchInputStyle}
+            />
+          </div>
+          <div style={{ overflowY: 'auto', padding: '0 0 8px' }}>
             {!hasResults && (
-              <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+              <div style={{ padding: '9px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
                 No fields match &ldquo;{search}&rdquo;
               </div>
             )}
@@ -175,16 +183,16 @@ export default function FieldPicker({ value, onChange, usedFields, billType }: F
                         style={{
                           ...itemStyle,
                           fontWeight: field.key === value ? 500 : 400,
-                          background: field.key === value ? 'var(--color-bg-alt)' : 'none',
+                          background: field.key === value ? 'var(--color-menu-selected)' : 'transparent',
                         }}
                         onMouseEnter={(e) => {
                           if (field.key !== value) {
-                            (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)';
+                            (e.currentTarget as HTMLElement).style.background = 'var(--color-menu-hover)';
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (field.key !== value) {
-                            (e.currentTarget as HTMLElement).style.background = 'none';
+                            (e.currentTarget as HTMLElement).style.background = 'transparent';
                           }
                         }}
                         onClick={() => {

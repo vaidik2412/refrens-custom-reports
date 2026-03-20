@@ -17,29 +17,32 @@ interface ConditionRowProps {
 
 const rowStyle: CSSProperties = {
   display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-  padding: '10px 12px',
+  alignItems: 'flex-start',
+  flexWrap: 'wrap',
+  gap: '10px',
+  padding: '12px',
   background: 'var(--color-bg-card)',
-  borderRadius: 'var(--radius-input)',
-  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-card)',
+  border: '1px solid var(--color-border-strong)',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
 };
 
 const removeBtnStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '28px',
-  height: '28px',
-  border: 'none',
-  background: 'none',
+  width: '32px',
+  height: '32px',
+  border: '1px solid transparent',
+  background: 'transparent',
   color: 'var(--color-text-secondary)',
   cursor: 'pointer',
-  borderRadius: 'var(--radius-tag)',
-  fontSize: '14px',
-  transition: 'background 0.15s, color 0.15s',
+  borderRadius: 'var(--radius-input)',
+  fontSize: '12px',
+  lineHeight: 1,
+  transition: 'background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease',
   flexShrink: 0,
-  marginTop: '2px',
+  marginLeft: 'auto',
 };
 
 export default function ConditionRow({ condition, onUpdate, onRemove, usedFields, billType }: ConditionRowProps) {
@@ -103,9 +106,9 @@ export default function ConditionRow({ condition, onUpdate, onRemove, usedFields
       )}
 
       {condition.field && (
-        <div style={{ flex: '1.5 1 200px', minWidth: 0 }}>
-          <ValueInput
-            fieldKey={condition.field}
+      <div style={{ flex: '1.5 1 200px', minWidth: 0 }}>
+        <ValueInput
+          fieldKey={condition.field}
             operator={condition.operator}
             value={condition.value}
             onChange={(v) => onUpdate(condition.id, { value: v })}
@@ -119,10 +122,12 @@ export default function ConditionRow({ condition, onUpdate, onRemove, usedFields
         onClick={() => onRemove(condition.id)}
         onMouseEnter={(e) => {
           (e.currentTarget as HTMLElement).style.background = 'var(--color-error-hover-bg)';
+          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239, 68, 68, 0.2)';
           (e.currentTarget as HTMLElement).style.color = 'var(--color-error)';
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.background = 'none';
+          (e.currentTarget as HTMLElement).style.background = 'transparent';
+          (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
           (e.currentTarget as HTMLElement).style.color = 'var(--color-text-secondary)';
         }}
         aria-label="Remove condition"

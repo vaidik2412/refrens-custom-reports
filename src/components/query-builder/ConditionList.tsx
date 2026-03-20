@@ -17,7 +17,7 @@ interface ConditionListProps {
 const containerStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '8px',
+  gap: '12px',
 };
 
 const headerStyle: CSSProperties = {
@@ -28,19 +28,21 @@ const headerStyle: CSSProperties = {
 };
 
 const titleStyle: CSSProperties = {
-  fontSize: '13px',
+  fontSize: '14px',
   fontWeight: 500,
-  color: 'var(--color-text-secondary)',
+  color: 'var(--color-text-label)',
   letterSpacing: '-0.25px',
 };
 
 const emptyStyle: CSSProperties = {
-  padding: '24px',
+  padding: '28px 24px',
   textAlign: 'center',
-  border: '1px dashed var(--color-border)',
+  border: '1px dashed var(--color-border-subtle)',
   borderRadius: 'var(--radius-input)',
+  background: 'var(--color-bg-secondary)',
   color: 'var(--color-text-secondary)',
   fontSize: '13px',
+  lineHeight: '20px',
 };
 
 const connectorStyle: CSSProperties = {
@@ -57,9 +59,16 @@ const connectorLineStyle: CSSProperties = {
 };
 
 const connectorLabelStyle: CSSProperties = {
-  fontSize: '11px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '2px 8px',
+  borderRadius: 'var(--radius-tag)',
+  border: '1px solid var(--color-chip-border)',
+  background: 'var(--color-chip-bg)',
+  fontSize: '10px',
   fontWeight: 600,
-  color: 'var(--color-cta-primary)',
+  color: 'var(--color-chip-text)',
   letterSpacing: '0.5px',
   textTransform: 'uppercase',
   flexShrink: 0,
@@ -68,7 +77,7 @@ const connectorLabelStyle: CSSProperties = {
 const actionsStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '4px',
+  gap: '8px',
 };
 
 export default function ConditionList({ group, onUpdate, billType }: ConditionListProps) {
