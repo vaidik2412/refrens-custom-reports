@@ -16,69 +16,72 @@ interface SplitButtonProps {
   onSelect: (value: string) => void;
 }
 
-const btnGroupStyle: CSSProperties = {
+const groupStyle: CSSProperties = {
+  position: 'relative',
   display: 'inline-flex',
   alignItems: 'stretch',
-  position: 'relative',
+  borderRadius: 'var(--radius-input)',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.08)',
+  overflow: 'hidden',
 };
 
-const mainBtnStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '8px 16px',
+const primaryButtonStyle: CSSProperties = {
+  minHeight: 'var(--height-button)',
+  padding: '0 16px',
+  border: '1px solid var(--color-cta-primary)',
+  borderRight: 'none',
   background: 'var(--color-cta-primary)',
   color: 'var(--color-bg-card)',
-  border: 'none',
-  borderRadius: 'var(--radius-input) 0 0 var(--radius-input)',
   fontSize: '14px',
   fontWeight: 500,
   letterSpacing: '-0.25px',
-  cursor: 'pointer',
-  transition: 'background 0.15s',
+  lineHeight: '20px',
+  transition: 'background-color 0.16s ease',
 };
 
-const caretBtnStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '0 10px',
+const caretButtonStyle: CSSProperties = {
+  width: '40px',
+  minHeight: 'var(--height-button)',
+  border: '1px solid var(--color-cta-primary)',
+  borderLeft: '1px solid var(--color-divider-on-primary)',
   background: 'var(--color-cta-primary)',
   color: 'var(--color-bg-card)',
-  border: 'none',
-  borderLeft: '1px solid var(--color-divider-on-primary)',
-  borderRadius: '0 var(--radius-input) var(--radius-input) 0',
-  cursor: 'pointer',
   fontSize: '12px',
-  transition: 'background 0.15s',
+  transition: 'background-color 0.16s ease',
 };
 
 const menuStyle: CSSProperties = {
   position: 'absolute',
-  top: 'calc(100% + 4px)',
+  top: 'calc(100% + 6px)',
   right: 0,
+  minWidth: '220px',
+  padding: '6px 0',
   background: 'var(--color-bg-card)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  boxShadow: 'var(--shadow-l1)',
-  zIndex: 40,
-  minWidth: '200px',
-  padding: '4px 0',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: '12px',
+  boxShadow: 'var(--shadow-popover)',
+  zIndex: 60,
 };
 
 const itemStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  padding: '8px 12px',
-  fontSize: '13px',
-  color: 'var(--color-text-primary)',
-  cursor: 'pointer',
-  border: 'none',
-  background: 'none',
   width: '100%',
+  padding: '9px 12px',
+  border: 'none',
+  background: 'transparent',
   textAlign: 'left',
+  fontSize: '13px',
+  lineHeight: '20px',
   letterSpacing: '-0.25px',
-  transition: 'background 0.1s',
+  color: 'var(--color-text-primary)',
+  transition: 'background-color 0.16s ease',
+};
+
+const dividerStyle: CSSProperties = {
+  height: '1px',
+  background: 'var(--color-border)',
+  margin: '6px 0',
 };
 
 export default function SplitButton({ label, onClick, items, onSelect }: SplitButtonProps) {
@@ -86,46 +89,68 @@ export default function SplitButton({ label, onClick, items, onSelect }: SplitBu
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+    const handleClick = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
         setOpen(false);
       }
     };
+
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
   }, []);
 
   return (
-    <div ref={ref} style={btnGroupStyle}>
-      <button style={mainBtnStyle} onClick={onClick}>
+    <div ref={ref} style={groupStyle}>
+      <button
+        type="button"
+        style={primaryButtonStyle}
+        onClick={onClick}
+        onMouseEnter={(event) => {
+          event.currentTarget.style.background = 'var(--color-cta-primary-hover)';
+        }}
+        onMouseLeave={(event) => {
+          event.currentTarget.style.background = 'var(--color-cta-primary)';
+        }}
+      >
         {label}
       </button>
-      <button style={caretBtnStyle} onClick={() => setOpen(!open)}>
-        &#x25BC;
+      <button
+        type="button"
+        style={caretButtonStyle}
+        onClick={() => setOpen((current) => !current)}
+        onMouseEnter={(event) => {
+          event.currentTarget.style.background = 'var(--color-cta-primary-hover)';
+        }}
+        onMouseLeave={(event) => {
+          event.currentTarget.style.background = 'var(--color-cta-primary)';
+        }}
+        aria-label="Open more actions"
+      >
+        &#x25BE;
       </button>
-      {open && (
+      {open ? (
         <div style={menuStyle}>
-          {items.map((item, i) => {
+          {items.map((item, index) => {
             if (item.divider) {
-              return (
-                <div
-                  key={i}
-                  style={{ height: '1px', background: 'var(--color-border)', margin: '4px 0' }}
-                />
-              );
+              return <div key={`divider-${index}`} style={dividerStyle} />;
             }
+
             return (
               <button
                 key={item.value}
+                type="button"
                 style={{
                   ...itemStyle,
                   color: item.danger ? 'var(--color-error)' : itemStyle.color,
                 }}
-                onMouseEnter={(e) => {
-                  (e.target as HTMLElement).style.background = 'var(--color-bg-alt)';
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.background = 'var(--color-menu-hover)';
                 }}
-                onMouseLeave={(e) => {
-                  (e.target as HTMLElement).style.background = 'none';
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.background = 'transparent';
                 }}
                 onClick={() => {
                   onSelect(item.value);
@@ -137,7 +162,7 @@ export default function SplitButton({ label, onClick, items, onSelect }: SplitBu
             );
           })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

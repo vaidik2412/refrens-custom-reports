@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useEffect, useRef, useState } from 'react';
+import { CSSProperties, ReactNode, useEffect, useRef, useState } from 'react';
 
 interface DropdownItem {
   label: string;
@@ -11,69 +11,92 @@ interface DropdownItem {
 }
 
 interface DropdownProps {
-  trigger: React.ReactNode;
+  trigger: ReactNode;
   items: DropdownItem[];
   onSelect: (value: string) => void;
   align?: 'left' | 'right';
-  header?: React.ReactNode;
+  header?: ReactNode;
   width?: number;
 }
 
 const menuStyle: CSSProperties = {
   position: 'absolute',
-  top: 'calc(100% + 4px)',
+  top: 'calc(100% + 6px)',
   background: 'var(--color-bg-card)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  boxShadow: 'var(--shadow-l1)',
-  zIndex: 40,
-  minWidth: '200px',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: '12px',
+  boxShadow: 'var(--shadow-popover)',
+  zIndex: 50,
+  minWidth: '220px',
   maxHeight: '320px',
   overflowY: 'auto',
-  padding: '4px 0',
+  padding: '6px 0',
 };
 
 const itemStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '8px',
-  padding: '8px 12px',
-  fontSize: '13px',
-  fontWeight: 400,
-  color: 'var(--color-text-primary)',
-  cursor: 'pointer',
-  transition: 'background 0.1s',
+  padding: '9px 12px',
   border: 'none',
-  background: 'none',
+  background: 'transparent',
   width: '100%',
   textAlign: 'left',
+  fontSize: '13px',
+  lineHeight: '20px',
   letterSpacing: '-0.25px',
+  color: 'var(--color-text-primary)',
+  cursor: 'pointer',
+  transition: 'background-color 0.16s ease, color 0.16s ease',
 };
 
 const dividerStyle: CSSProperties = {
   height: '1px',
   background: 'var(--color-border)',
-  margin: '4px 0',
+  margin: '6px 0',
 };
 
-export default function Dropdown({ trigger, items, onSelect, align = 'left', header, width }: DropdownProps) {
+export default function Dropdown({
+  trigger,
+  items,
+  onSelect,
+  align = 'left',
+  header,
+  width,
+}: DropdownProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+    const handleClick = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
         setOpen(false);
       }
     };
+
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
   }, []);
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
-      <div onClick={() => setOpen(!open)}>{trigger}</div>
-      {open && (
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen((current) => !current)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setOpen((current) => !current);
+          }
+        }}
+      >
+        {trigger}
+      </div>
+      {open ? (
         <div
           style={{
             ...menuStyle,
@@ -82,35 +105,37 @@ export default function Dropdown({ trigger, items, onSelect, align = 'left', hea
           }}
         >
           {header}
-          {items.map((item, i) => {
+          {items.map((item, index) => {
             if (item.divider) {
-              return <div key={i} style={dividerStyle} />;
+              return <div key={`divider-${index}`} style={dividerStyle} />;
             }
+
             return (
               <button
                 key={item.value}
+                type="button"
                 style={{
                   ...itemStyle,
                   color: item.danger ? 'var(--color-error)' : itemStyle.color,
                 }}
-                onMouseEnter={(e) => {
-                  (e.target as HTMLElement).style.background = 'var(--color-bg-alt)';
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.background = 'var(--color-menu-hover)';
                 }}
-                onMouseLeave={(e) => {
-                  (e.target as HTMLElement).style.background = 'none';
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.background = 'transparent';
                 }}
                 onClick={() => {
                   onSelect(item.value);
                   setOpen(false);
                 }}
               >
-                {item.icon && <span>{item.icon}</span>}
-                {item.label}
+                {item.icon ? <span>{item.icon}</span> : null}
+                <span>{item.label}</span>
               </button>
             );
           })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -9,23 +9,25 @@ interface PillProps {
   variant?: 'default' | 'brand';
 }
 
-const pillStyle: CSSProperties = {
+const pillBaseStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '6px',
-  padding: '4px 10px',
+  gap: '8px',
+  minHeight: '32px',
+  padding: '4px 12px',
   borderRadius: 'var(--radius-pill)',
-  fontSize: '12px',
+  fontSize: '13px',
   fontWeight: 500,
+  lineHeight: '20px',
   letterSpacing: '-0.25px',
   whiteSpace: 'nowrap',
 };
 
-const variants = {
+const pillVariants: Record<NonNullable<PillProps['variant']>, CSSProperties> = {
   default: {
-    background: 'var(--color-bg-alt)',
+    background: 'var(--color-bg-card)',
     color: 'var(--color-text-primary)',
-    border: '1px solid var(--color-border)',
+    border: '1px solid var(--color-border-strong)',
   },
   brand: {
     background: 'var(--color-chip-bg)',
@@ -34,35 +36,54 @@ const variants = {
   },
 };
 
-const removeBtnStyle: CSSProperties = {
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  fontSize: '14px',
-  lineHeight: 1,
-  padding: 0,
-  color: 'inherit',
-  opacity: 0.6,
-  display: 'flex',
+const valueStyle: CSSProperties = {
+  opacity: 0.76,
+  fontWeight: 400,
+};
+
+const removeButtonStyle: CSSProperties = {
+  display: 'inline-flex',
   alignItems: 'center',
+  justifyContent: 'center',
+  width: '18px',
+  height: '18px',
+  border: 'none',
+  borderRadius: '999px',
+  background: 'transparent',
+  color: 'inherit',
+  cursor: 'pointer',
+  fontSize: '13px',
+  lineHeight: 1,
+  opacity: 0.64,
+  padding: 0,
+  transition: 'background-color 0.16s ease, opacity 0.16s ease',
 };
 
 export default function Pill({ label, value, onRemove, variant = 'default' }: PillProps) {
   return (
-    <span style={{ ...pillStyle, ...variants[variant] }}>
+    <span style={{ ...pillBaseStyle, ...pillVariants[variant] }}>
       <span>
         {label}
-        {value && (
-          <span style={{ opacity: 0.7 }}>
-            : {value}
-          </span>
-        )}
+        {value ? <span style={valueStyle}>: {value}</span> : null}
       </span>
-      {onRemove && (
-        <button style={removeBtnStyle} onClick={onRemove} aria-label={`Remove ${label}`}>
+      {onRemove ? (
+        <button
+          type="button"
+          style={removeButtonStyle}
+          onClick={onRemove}
+          onMouseEnter={(event) => {
+            event.currentTarget.style.opacity = '1';
+            event.currentTarget.style.background = 'rgba(0, 0, 0, 0.06)';
+          }}
+          onMouseLeave={(event) => {
+            event.currentTarget.style.opacity = '0.64';
+            event.currentTarget.style.background = 'transparent';
+          }}
+          aria-label={`Remove ${label}`}
+        >
           &#x2715;
         </button>
-      )}
+      ) : null}
     </span>
   );
 }

@@ -1,22 +1,14 @@
 'use client';
 
-import { CSSProperties, InputHTMLAttributes } from 'react';
+import { CSSProperties, InputHTMLAttributes, TextareaHTMLAttributes, useState } from 'react';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
 }
 
-const inputStyle: CSSProperties = {
+const wrapperStyle: CSSProperties = {
   width: '100%',
-  padding: '8px 12px',
-  border: '1px solid var(--color-border-input)',
-  borderRadius: 'var(--radius-input)',
-  fontSize: '14px',
-  color: 'var(--color-text-primary)',
-  outline: 'none',
-  transition: 'border-color 0.15s, box-shadow 0.15s',
-  background: 'var(--color-bg-card)',
 };
 
 const labelStyle: CSSProperties = {
@@ -24,37 +16,105 @@ const labelStyle: CSSProperties = {
   fontSize: '13px',
   fontWeight: 500,
   color: 'var(--color-text-label)',
-  marginBottom: '4px',
+  marginBottom: '6px',
   letterSpacing: '-0.25px',
 };
 
-export default function Input({ label, error, style, ...props }: InputProps) {
+const helpTextStyle: CSSProperties = {
+  display: 'block',
+  marginTop: '6px',
+  fontSize: '12px',
+  lineHeight: '20px',
+  color: 'var(--color-error)',
+};
+
+const fieldBaseStyle: CSSProperties = {
+  width: '100%',
+  minHeight: 'var(--height-input)',
+  padding: '9px 12px',
+  border: '1px solid var(--color-border-input)',
+  borderRadius: 'var(--radius-input)',
+  fontSize: '14px',
+  lineHeight: '20px',
+  color: 'var(--color-text-primary)',
+  outline: 'none',
+  background: 'var(--color-bg-card)',
+  transition: 'border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease',
+};
+
+function getFieldStateStyle({
+  focused,
+  hovered,
+  error,
+}: {
+  focused: boolean;
+  hovered: boolean;
+  error?: string;
+}): CSSProperties {
+  if (error) {
+    return {
+      borderColor: 'rgba(239, 68, 68, 0.28)',
+      boxShadow: focused ? '0 0 0 3px rgba(239, 68, 68, 0.12)' : 'none',
+    };
+  }
+
+  if (focused) {
+    return {
+      borderColor: 'var(--color-border-input-focus)',
+      boxShadow: 'var(--shadow-focus)',
+    };
+  }
+
+  if (hovered) {
+    return {
+      borderColor: 'var(--color-border-input-hover)',
+    };
+  }
+
+  return {};
+}
+
+export default function Input({
+  label,
+  error,
+  style,
+  onFocus,
+  onBlur,
+  onMouseEnter,
+  onMouseLeave,
+  ...props
+}: InputProps) {
+  const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <div style={{ width: '100%' }}>
+    <div style={wrapperStyle}>
       {label && <label style={labelStyle}>{label}</label>}
       <input
         style={{
-          ...inputStyle,
-          borderColor: error ? 'var(--color-error)' : undefined,
+          ...fieldBaseStyle,
+          ...getFieldStateStyle({ focused, hovered, error }),
           ...style,
         }}
-        onFocus={(e) => {
-          e.target.style.borderColor = 'var(--color-cta-primary)';
-          e.target.style.boxShadow = 'var(--shadow-focus)';
-          props.onFocus?.(e);
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
         }}
-        onBlur={(e) => {
-          e.target.style.borderColor = error ? 'var(--color-error)' : 'var(--color-border-input)';
-          e.target.style.boxShadow = 'none';
-          props.onBlur?.(e);
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
+        onMouseEnter={(event) => {
+          setHovered(true);
+          onMouseEnter?.(event);
+        }}
+        onMouseLeave={(event) => {
+          setHovered(false);
+          onMouseLeave?.(event);
         }}
         {...props}
       />
-      {error && (
-        <span style={{ fontSize: '12px', color: 'var(--color-error)', marginTop: '4px', display: 'block' }}>
-          {error}
-        </span>
-      )}
+      {error && <span style={helpTextStyle}>{error}</span>}
     </div>
   );
 }
@@ -62,25 +122,41 @@ export default function Input({ label, error, style, ...props }: InputProps) {
 export function Textarea({
   label,
   style,
+  onFocus,
+  onBlur,
+  onMouseEnter,
+  onMouseLeave,
   ...props
-}: { label?: string } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+}: { label?: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <div style={{ width: '100%' }}>
+    <div style={wrapperStyle}>
       {label && <label style={labelStyle}>{label}</label>}
       <textarea
         style={{
-          ...inputStyle,
-          minHeight: '80px',
-          resize: 'vertical' as const,
+          ...fieldBaseStyle,
+          minHeight: '96px',
+          resize: 'vertical',
+          ...getFieldStateStyle({ focused, hovered }),
           ...style,
         }}
-        onFocus={(e) => {
-          e.target.style.borderColor = 'var(--color-cta-primary)';
-          e.target.style.boxShadow = 'var(--shadow-focus)';
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
         }}
-        onBlur={(e) => {
-          e.target.style.borderColor = 'var(--color-border-input)';
-          e.target.style.boxShadow = 'none';
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
+        onMouseEnter={(event) => {
+          setHovered(true);
+          onMouseEnter?.(event);
+        }}
+        onMouseLeave={(event) => {
+          setHovered(false);
+          onMouseLeave?.(event);
         }}
         {...props}
       />
