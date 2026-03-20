@@ -506,12 +506,9 @@ const presetSelectStyle: CSSProperties = {
 
 const helperTextStyle: CSSProperties = {
   fontSize: '12px',
+  lineHeight: '20px',
   color: 'var(--color-text-secondary)',
   letterSpacing: '-0.25px',
-  padding: '8px 10px',
-  borderRadius: 'var(--radius-input)',
-  border: '1px solid var(--color-border-subtle)',
-  background: 'var(--color-bg-secondary)',
 };
 
 function DateBetweenInput({
@@ -619,30 +616,32 @@ function DateBetweenInput({
   // Dynamic mode
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <RadioGroup
-        options={[
-          { label: 'Fixed', value: 'fixed' },
-          { label: 'Dynamic', value: 'dynamic' },
-        ]}
-        value="dynamic"
-        onChange={handleModeChange}
-      />
-      <select
-        value={value.preset || 'this_month'}
-        onChange={(e) => handlePresetChange(e.target.value as DynamicPreset)}
-        style={{ ...presetSelectStyle, maxWidth: '260px' }}
-        {...focusHandlers}
-      >
-        {PRESET_GROUPS.map((group) => (
-          <optgroup key={group.label} label={group.label}>
-            {group.presets.map((preset) => (
-              <option key={preset} value={preset}>
-                {DYNAMIC_PRESET_LABELS[preset]}
-              </option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+        <RadioGroup
+          options={[
+            { label: 'Fixed', value: 'fixed' },
+            { label: 'Dynamic', value: 'dynamic' },
+          ]}
+          value="dynamic"
+          onChange={handleModeChange}
+        />
+        <select
+          value={value.preset || 'this_month'}
+          onChange={(e) => handlePresetChange(e.target.value as DynamicPreset)}
+          style={{ ...presetSelectStyle, width: '220px' }}
+          {...focusHandlers}
+        >
+          {PRESET_GROUPS.map((group) => (
+            <optgroup key={group.label} label={group.label}>
+              {group.presets.map((preset) => (
+                <option key={preset} value={preset}>
+                  {DYNAMIC_PRESET_LABELS[preset]}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
 
       {value.preset === 'custom_period' && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
@@ -792,30 +791,32 @@ function DateSingleInput({
   // Dynamic mode
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <RadioGroup
-        options={[
-          { label: 'Fixed', value: 'fixed' },
-          { label: 'Dynamic', value: 'dynamic' },
-        ]}
-        value="dynamic"
-        onChange={handleModeChange}
-      />
-      <select
-        value={value.preset || 'today'}
-        onChange={(e) => handlePresetChange(e.target.value as DynamicPreset)}
-        style={{ ...presetSelectStyle, maxWidth: '260px' }}
-        {...focusHandlers}
-      >
-        {PRESET_GROUPS.map((group) => (
-          <optgroup key={group.label} label={group.label}>
-            {group.presets.map((preset) => (
-              <option key={preset} value={preset}>
-                {DYNAMIC_PRESET_LABELS[preset]}
-              </option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+        <RadioGroup
+          options={[
+            { label: 'Fixed', value: 'fixed' },
+            { label: 'Dynamic', value: 'dynamic' },
+          ]}
+          value="dynamic"
+          onChange={handleModeChange}
+        />
+        <select
+          value={value.preset || 'today'}
+          onChange={(e) => handlePresetChange(e.target.value as DynamicPreset)}
+          style={{ ...presetSelectStyle, width: '220px' }}
+          {...focusHandlers}
+        >
+          {PRESET_GROUPS.map((group) => (
+            <optgroup key={group.label} label={group.label}>
+              {group.presets.map((preset) => (
+                <option key={preset} value={preset}>
+                  {DYNAMIC_PRESET_LABELS[preset]}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
 
       {value.preset === 'custom_period' && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
