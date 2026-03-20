@@ -44,13 +44,25 @@ const emptyStyle: CSSProperties = {
 };
 
 const connectorStyle: CSSProperties = {
-  textAlign: 'center',
-  padding: '2px 0',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  padding: '4px 0',
+};
+
+const connectorLineStyle: CSSProperties = {
+  flex: 1,
+  height: 0,
+  borderTop: '1px solid var(--color-border)',
+};
+
+const connectorLabelStyle: CSSProperties = {
   fontSize: '11px',
   fontWeight: 600,
   color: 'var(--color-cta-primary)',
   letterSpacing: '0.5px',
   textTransform: 'uppercase',
+  flexShrink: 0,
 };
 
 const actionsStyle: CSSProperties = {
@@ -204,7 +216,9 @@ export default function ConditionList({ group, onUpdate, billType }: ConditionLi
           <div key={item.type === 'condition' ? item.condition.id : item.group.id}>
             {index > 0 && (
               <div style={connectorStyle}>
-                {group.logicalOperator}
+                <div style={connectorLineStyle} />
+                <span style={connectorLabelStyle}>{group.logicalOperator}</span>
+                <div style={connectorLineStyle} />
               </div>
             )}
             {item.type === 'condition' ? (

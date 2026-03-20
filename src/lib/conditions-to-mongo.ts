@@ -44,7 +44,7 @@ function conditionToMongoFragment(condition: QueryCondition): Record<string, any
 
   // Skip empty array operators
   if (
-    (condition.operator === '$in' || condition.operator === '$all') &&
+    (condition.operator === '$in' || condition.operator === '$nin' || condition.operator === '$all') &&
     Array.isArray(condition.value) &&
     condition.value.length === 0
   ) {

@@ -14,7 +14,9 @@ interface OperatorPickerProps {
 
 const selectStyle: CSSProperties = {
   padding: '6px 10px',
-  border: '1px solid var(--color-border-input)',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderColor: 'var(--color-border)',
   borderRadius: 'var(--radius-input)',
   background: 'var(--color-bg-card)',
   fontSize: '13px',
@@ -24,6 +26,8 @@ const selectStyle: CSSProperties = {
   letterSpacing: '-0.25px',
   outline: 'none',
   minWidth: '120px',
+  height: '34px',
+  width: '100%',
 };
 
 export default function OperatorPicker({ fieldKey, value, onChange, dynamicDate }: OperatorPickerProps) {
@@ -47,7 +51,6 @@ export default function OperatorPicker({ fieldKey, value, onChange, dynamicDate 
       <span
         style={{
           ...selectStyle,
-          border: '1px solid var(--color-border)',
           cursor: 'default',
           color: 'var(--color-text-secondary)',
           display: 'inline-flex',
@@ -69,7 +72,7 @@ export default function OperatorPicker({ fieldKey, value, onChange, dynamicDate 
         e.target.style.boxShadow = 'var(--shadow-focus)';
       }}
       onBlur={(e) => {
-        e.target.style.borderColor = 'var(--color-border-input)';
+        e.target.style.borderColor = 'var(--color-border)';
         e.target.style.boxShadow = 'none';
       }}
     >

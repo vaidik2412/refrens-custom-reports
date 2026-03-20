@@ -18,13 +18,16 @@ interface ValueInputProps {
 
 const inputStyle: CSSProperties = {
   padding: '6px 10px',
-  border: '1px solid var(--color-border-input)',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderColor: 'var(--color-border)',
   borderRadius: 'var(--radius-input)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
   outline: 'none',
   letterSpacing: '-0.25px',
   minWidth: '140px',
+  height: '34px',
 };
 
 const selectStyle: CSSProperties = {
@@ -39,7 +42,7 @@ const focusHandlers = {
     e.target.style.boxShadow = 'var(--shadow-focus)';
   },
   onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = 'var(--color-border-input)';
+    e.target.style.borderColor = 'var(--color-border)';
     e.target.style.boxShadow = 'none';
   },
 };
@@ -79,30 +82,44 @@ function MultiSelectDropdown({
   };
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
-      <button
-        type="button"
+    <div ref={ref} style={{ position: 'relative', display: 'flex', width: '100%' }}>
+      <div
+        role="button"
+        tabIndex={0}
         style={{
           ...selectStyle,
-          display: 'inline-flex',
+          height: 'auto',
+          display: 'flex',
           alignItems: 'center',
           gap: '4px',
           flexWrap: 'wrap',
-          minHeight: '32px',
+          minHeight: '34px',
+          width: '100%',
           borderColor: open ? 'var(--color-cta-primary)' : undefined,
+          textAlign: 'left',
         }}
         onClick={() => setOpen(!open)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(!open); } }}
       >
         {value.length === 0 && (
           <span style={{ color: 'var(--color-text-secondary)' }}>Select values...</span>
         )}
-        {value.length > 0 && (
-          <span style={{ fontSize: '13px' }}>
-            {value.length} selected
-          </span>
-        )}
-        <span style={{ fontSize: '10px', opacity: 0.5, marginLeft: 'auto' }}>&#9662;</span>
-      </button>
+        {value.length > 0 && value.map((v) => {
+          const opt = options.find((o) => o.value === v);
+          return (
+            <Pill
+              key={v}
+              label={opt?.label || v}
+              onRemove={(e) => {
+                e.stopPropagation();
+                onChange(value.filter((val) => val !== v));
+              }}
+              variant="brand"
+            />
+          );
+        })}
+        <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginLeft: 'auto', flexShrink: 0 }}>&#8964;</span>
+      </div>
       {open && (
         <div
           style={{
@@ -460,7 +477,9 @@ function TagInput({
 
 const presetSelectStyle: CSSProperties = {
   padding: '6px 10px',
-  border: '1px solid var(--color-border-input)',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderColor: 'var(--color-border)',
   borderRadius: 'var(--radius-input)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
@@ -849,8 +868,8 @@ export default function ValueInput({ fieldKey, operator, value, onChange }: Valu
     );
   }
 
-  // Enum + $in → multi-select checkbox dropdown
-  if (fieldType === 'enum' && operator === '$in' && options) {
+  // Enum + $in/$nin → multi-select checkbox dropdown
+  if (fieldType === 'enum' && (operator === '$in' || operator === '$nin') && options) {
     const arrVal = Array.isArray(value) ? value : [];
     return <MultiSelectDropdown options={options} value={arrVal} onChange={onChange} />;
   }

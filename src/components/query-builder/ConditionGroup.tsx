@@ -174,15 +174,23 @@ export default function ConditionGroup({ group, onUpdate, onRemove, billType }: 
           <div key={condition.id}>
             {index > 0 && (
               <div style={{
-                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
                 padding: '2px 0',
-                fontSize: '10px',
-                fontWeight: 600,
-                color: 'var(--color-chip-text)',
-                letterSpacing: '0.5px',
-                textTransform: 'uppercase',
               }}>
-                {group.logicalOperator}
+                <div style={{ flex: 1, borderTop: '1px solid var(--color-border)' }} />
+                <span style={{
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  color: 'var(--color-chip-text)',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  flexShrink: 0,
+                }}>
+                  {group.logicalOperator}
+                </span>
+                <div style={{ flex: 1, borderTop: '1px solid var(--color-border)' }} />
               </div>
             )}
             <ConditionRow

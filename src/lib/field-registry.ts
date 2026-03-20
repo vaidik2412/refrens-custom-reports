@@ -68,7 +68,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     key: 'currency',
     label: 'Currency',
     fieldType: 'enum',
-    operators: ENUM_OPERATORS,
+    operators: ENUM_EXCLUDE_OPERATORS,
     defaultOperator: '$eq',
     options: CURRENCY_OPTIONS,
     category: 'core',

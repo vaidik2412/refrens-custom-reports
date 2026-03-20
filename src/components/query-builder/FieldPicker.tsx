@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useEffect, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import { getFieldsByCategoryForBillType, CATEGORY_LABELS } from '@/lib/field-registry';
 
 interface FieldPickerProps {
@@ -14,7 +14,9 @@ const triggerStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   padding: '6px 10px',
-  border: '1px solid var(--color-border-input)',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderColor: 'var(--color-border)',
   borderRadius: 'var(--radius-input)',
   background: 'var(--color-bg-card)',
   fontSize: '13px',
@@ -22,6 +24,7 @@ const triggerStyle: CSSProperties = {
   color: 'var(--color-text-primary)',
   cursor: 'pointer',
   minWidth: '160px',
+  height: '34px',
   letterSpacing: '-0.25px',
   transition: 'border-color 0.15s',
   justifyContent: 'space-between',
@@ -39,8 +42,19 @@ const menuStyle: CSSProperties = {
   zIndex: 40,
   minWidth: '220px',
   maxHeight: '320px',
-  overflowY: 'auto',
-  padding: '4px 0',
+  display: 'flex',
+  flexDirection: 'column',
+};
+
+const searchInputStyle: CSSProperties = {
+  padding: '8px 12px',
+  border: 'none',
+  borderBottom: '1px solid var(--color-border)',
+  fontSize: '13px',
+  color: 'var(--color-text-primary)',
+  outline: 'none',
+  letterSpacing: '-0.25px',
+  background: 'transparent',
 };
 
 const categoryStyle: CSSProperties = {
@@ -71,7 +85,9 @@ const CATEGORY_ORDER = ['core', 'financial', 'tax', 'metadata'];
 
 export default function FieldPicker({ value, onChange, usedFields, billType }: FieldPickerProps) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const ref = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const grouped = getFieldsByCategoryForBillType(billType);
 
   useEffect(() => {
@@ -84,17 +100,40 @@ export default function FieldPicker({ value, onChange, usedFields, billType }: F
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  // Auto-focus search input when dropdown opens
+  useEffect(() => {
+    if (open) {
+      setSearch('');
+      requestAnimationFrame(() => searchRef.current?.focus());
+    }
+  }, [open]);
+
+  // Filter fields by search query
+  const filteredGrouped = useMemo(() => {
+    if (!search.trim()) return grouped;
+    const q = search.toLowerCase();
+    const result: Record<string, typeof grouped[string]> = {};
+    for (const [cat, fields] of Object.entries(grouped)) {
+      const matched = fields.filter((f) => f.label.toLowerCase().includes(q));
+      if (matched.length > 0) result[cat] = matched;
+    }
+    return result;
+  }, [grouped, search]);
+
+  const hasResults = Object.values(filteredGrouped).some((f) => f.length > 0);
+
   // Find label for selected value
   const selectedLabel = value
     ? Object.values(grouped).flat().find((f) => f.key === value)?.label || value
     : 'Select field...';
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
+    <div ref={ref} style={{ position: 'relative', display: 'flex' }}>
       <button
         type="button"
         style={{
           ...triggerStyle,
+          width: '100%',
           color: value ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
           borderColor: open ? 'var(--color-cta-primary)' : undefined,
         }}
@@ -103,49 +142,64 @@ export default function FieldPicker({ value, onChange, usedFields, billType }: F
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {selectedLabel}
         </span>
-        <span style={{ fontSize: '10px', opacity: 0.5 }}>&#9662;</span>
+        <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>&#8964;</span>
       </button>
 
       {open && (
         <div style={menuStyle}>
-          {CATEGORY_ORDER.map((cat) => {
-            const fields = grouped[cat];
-            if (!fields || fields.length === 0) return null;
-            return (
-              <div key={cat}>
-                <div style={categoryStyle}>{CATEGORY_LABELS[cat] || cat}</div>
-                {fields.map((field) => {
-                  return (
-                    <button
-                      key={field.key}
-                      type="button"
-                      style={{
-                        ...itemStyle,
-                        fontWeight: field.key === value ? 500 : 400,
-                        background: field.key === value ? 'var(--color-bg-alt)' : 'none',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (field.key !== value) {
-                          (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (field.key !== value) {
-                          (e.currentTarget as HTMLElement).style.background = 'none';
-                        }
-                      }}
-                      onClick={() => {
-                        onChange(field.key);
-                        setOpen(false);
-                      }}
-                    >
-                      {field.label}
-                    </button>
-                  );
-                })}
+          <input
+            ref={searchRef}
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search fields..."
+            style={searchInputStyle}
+          />
+          <div style={{ overflowY: 'auto', padding: '4px 0' }}>
+            {!hasResults && (
+              <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                No fields match &ldquo;{search}&rdquo;
               </div>
-            );
-          })}
+            )}
+            {CATEGORY_ORDER.map((cat) => {
+              const fields = filteredGrouped[cat];
+              if (!fields || fields.length === 0) return null;
+              return (
+                <div key={cat}>
+                  <div style={categoryStyle}>{CATEGORY_LABELS[cat] || cat}</div>
+                  {fields.map((field) => {
+                    return (
+                      <button
+                        key={field.key}
+                        type="button"
+                        style={{
+                          ...itemStyle,
+                          fontWeight: field.key === value ? 500 : 400,
+                          background: field.key === value ? 'var(--color-bg-alt)' : 'none',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (field.key !== value) {
+                            (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (field.key !== value) {
+                            (e.currentTarget as HTMLElement).style.background = 'none';
+                          }
+                        }}
+                        onClick={() => {
+                          onChange(field.key);
+                          setOpen(false);
+                        }}
+                      >
+                        {field.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useState, useCallback } from 'react';
+import { CSSProperties, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import BillTypeStep from './BillTypeStep';
 import ConditionList from './ConditionList';
@@ -133,7 +133,8 @@ export default function QueryBuilderPage() {
   // Preview
   const [previewQuery, setPreviewQuery] = useState<Record<string, any> | null>(null);
   const [previewSort, setPreviewSort] = useState<SortParam | undefined>(undefined);
-  const { data, total, loading, page, setPage, limit } = useInvoices(previewQuery || {}, previewSort);
+  const stableEmptyQuery = useMemo(() => ({}), []);
+  const { data, total, loading, page, setPage, limit } = useInvoices(previewQuery || stableEmptyQuery, previewSort);
 
   // Save modal
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -327,7 +328,7 @@ export default function QueryBuilderPage() {
         open={showSaveModal}
         onClose={() => setShowSaveModal(false)}
         onSave={handleSave}
-        filters={previewQuery || {}}
+        filters={previewQuery || stableEmptyQuery}
         saveAsNew
         hideDateBehaviour
       />

@@ -17,7 +17,7 @@ interface ConditionRowProps {
 
 const rowStyle: CSSProperties = {
   display: 'flex',
-  alignItems: 'flex-start',
+  alignItems: 'center',
   gap: '8px',
   padding: '10px 12px',
   background: 'var(--color-bg-card)',
@@ -54,7 +54,7 @@ export default function ConditionRow({ condition, onUpdate, onRemove, usedFields
 
   const handleOperatorChange = (operator: Operator) => {
     const entry = getFieldEntry(condition.field);
-    const multiOperators: Operator[] = ['$in', '$all'];
+    const multiOperators: Operator[] = ['$in', '$nin', '$all'];
     const wasMulti = multiOperators.includes(condition.operator);
     const isMulti = multiOperators.includes(operator);
     const isDateField = entry?.fieldType === 'date';
@@ -82,24 +82,28 @@ export default function ConditionRow({ condition, onUpdate, onRemove, usedFields
 
   return (
     <div style={rowStyle}>
-      <FieldPicker
-        value={condition.field}
-        onChange={handleFieldChange}
-        usedFields={usedFields}
-        billType={billType}
-      />
+      <div style={{ flex: '1 1 180px', minWidth: 0 }}>
+        <FieldPicker
+          value={condition.field}
+          onChange={handleFieldChange}
+          usedFields={usedFields}
+          billType={billType}
+        />
+      </div>
 
       {condition.field && (
-        <OperatorPicker
-          fieldKey={condition.field}
-          value={condition.operator}
-          onChange={handleOperatorChange}
-          dynamicDate={condition.value?.dynamic === true}
-        />
+        <div style={{ flex: '0 0 auto' }}>
+          <OperatorPicker
+            fieldKey={condition.field}
+            value={condition.operator}
+            onChange={handleOperatorChange}
+            dynamicDate={condition.value?.dynamic === true}
+          />
+        </div>
       )}
 
       {condition.field && (
-        <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+        <div style={{ flex: '1.5 1 200px', minWidth: 0 }}>
           <ValueInput
             fieldKey={condition.field}
             operator={condition.operator}

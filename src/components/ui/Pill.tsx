@@ -5,7 +5,7 @@ import { CSSProperties } from 'react';
 interface PillProps {
   label: string;
   value?: string;
-  onRemove?: () => void;
+  onRemove?: (e: React.MouseEvent) => void;
   variant?: 'default' | 'brand';
 }
 
