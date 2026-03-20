@@ -8,31 +8,33 @@ interface Props {
 }
 
 const btnStyle: CSSProperties = {
-  padding: '6px 12px',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-tag)',
+  minHeight: 'var(--height-button-sm)',
+  padding: '0 12px',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: 'var(--radius-input)',
   background: 'var(--color-bg-card)',
-  fontSize: '12px',
+  fontSize: '13px',
   fontWeight: 500,
   color: 'var(--color-text-primary)',
   cursor: 'pointer',
   letterSpacing: '-0.25px',
   whiteSpace: 'nowrap',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
 };
 
 const menuStyle: CSSProperties = {
   position: 'absolute',
-  top: 'calc(100% + 4px)',
+  top: 'calc(100% + 6px)',
   right: 0,
   background: 'var(--color-bg-card)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  boxShadow: 'var(--shadow-l2)',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: '12px',
+  boxShadow: 'var(--shadow-popover)',
   zIndex: 50,
   maxHeight: '320px',
   overflowY: 'auto',
-  padding: '4px 0',
-  minWidth: '180px',
+  padding: '6px 0',
+  minWidth: '220px',
 };
 
 const itemStyle: CSSProperties = {
@@ -40,9 +42,9 @@ const itemStyle: CSSProperties = {
   alignItems: 'center',
   gap: '8px',
   width: '100%',
-  padding: '6px 12px',
+  padding: '9px 12px',
   border: 'none',
-  background: 'none',
+  background: 'transparent',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
   cursor: 'pointer',
@@ -72,6 +74,12 @@ export default function ColumnVisibilityDropdown({ table }: Props) {
       <button
         type="button"
         style={btnStyle}
+        onMouseEnter={(event) => {
+          event.currentTarget.style.background = 'var(--color-bg-hover)';
+        }}
+        onMouseLeave={(event) => {
+          event.currentTarget.style.background = 'var(--color-bg-card)';
+        }}
         onClick={() => setOpen(!open)}
       >
         Columns ({visibleCount}/{allColumns.length})
@@ -88,7 +96,16 @@ export default function ColumnVisibilityDropdown({ table }: Props) {
             </button>
           </div>
           {allColumns.map((column) => (
-            <label key={column.id} style={{ ...itemStyle, cursor: 'pointer' }}>
+            <label
+              key={column.id}
+              style={{ ...itemStyle, cursor: 'pointer' }}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.background = 'var(--color-menu-hover)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.background = 'transparent';
+              }}
+            >
               <input
                 type="checkbox"
                 checked={column.getIsVisible()}

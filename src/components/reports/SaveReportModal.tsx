@@ -3,6 +3,8 @@
 import { CSSProperties, useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
 import RadioGroup from '@/components/ui/RadioGroup';
+import Button from '@/components/ui/Button';
+import Input, { Textarea } from '@/components/ui/Input';
 import { DYNAMIC_PRESET_LABELS, PRESET_GROUPS } from '@/lib/date-utils';
 import { buildSavedQueryPayload, normalizeDateFields } from '@/lib/saved-query-contract';
 import type { DateFieldConfig, DynamicPreset, SavedQuery } from '@/types';
@@ -28,52 +30,45 @@ interface SaveReportModalProps {
 const fieldStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '4px',
-  marginBottom: '16px',
-};
-
-const labelStyle: CSSProperties = {
-  fontSize: '13px',
-  fontWeight: 500,
-  color: 'var(--color-text-label)',
-  letterSpacing: '-0.25px',
-};
-
-const inputStyle: CSSProperties = {
-  padding: '8px 12px',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  fontSize: '14px',
-  color: 'var(--color-text-primary)',
-  outline: 'none',
-  width: '100%',
-  letterSpacing: '-0.25px',
-};
-
-const textareaStyle: CSSProperties = {
-  ...inputStyle,
-  minHeight: '60px',
-  resize: 'vertical',
-  fontFamily: 'inherit',
+  gap: '6px',
+  marginBottom: '18px',
 };
 
 const dateFieldRowStyle: CSSProperties = {
   background: 'var(--color-bg-alt)',
-  borderRadius: 'var(--radius-input)',
-  padding: '12px',
-  marginBottom: '8px',
+  border: '1px solid var(--color-border)',
+  borderRadius: '12px',
+  padding: '14px',
+  marginBottom: '10px',
 };
 
 const presetSelectStyle: CSSProperties = {
-  padding: '6px 10px',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-tag)',
+  minHeight: 'var(--height-input)',
+  padding: '8px 12px',
+  border: '1px solid var(--color-border-input)',
+  borderRadius: 'var(--radius-input)',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
   background: 'var(--color-bg-card)',
   outline: 'none',
   width: '100%',
   marginTop: '8px',
+  letterSpacing: '-0.25px',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
+};
+
+const helperTextStyle: CSSProperties = {
+  fontSize: '12px',
+  lineHeight: '20px',
+  color: 'var(--color-text-secondary)',
+};
+
+const rowTitleStyle: CSSProperties = {
+  fontSize: '13px',
+  fontWeight: 600,
+  lineHeight: '20px',
+  color: 'var(--color-text-primary)',
+  marginBottom: '10px',
 };
 
 const DATE_FILTER_KEYS = ['invoiceDate', 'dueDate', 'lastPaymentDate', 'createdAt'];
@@ -221,68 +216,45 @@ export default function SaveReportModal({
       title={existingReport && !saveAsNew ? 'Edit Report' : 'Save as New Report'}
       footer={
         <>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '8px 16px',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-input)',
-              background: 'var(--color-bg-card)',
-              color: 'var(--color-text-primary)',
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
-          >
+          <Button variant="secondary" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!name.trim() || saving}
-            style={{
-              padding: '8px 20px',
-              border: 'none',
-              borderRadius: 'var(--radius-input)',
-              background: name.trim() ? 'var(--color-cta-primary)' : 'var(--color-border)',
-              color: name.trim() ? 'var(--color-bg-card)' : 'var(--color-text-secondary)',
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: name.trim() ? 'pointer' : 'not-allowed',
-            }}
-          >
+          </Button>
+          <Button onClick={handleSave} disabled={!name.trim() || saving}>
             {saving ? 'Saving...' : 'Save Report'}
-          </button>
+          </Button>
         </>
       }
     >
       {/* Report Name */}
       <div style={fieldStyle}>
-        <label style={labelStyle}>Report Name *</label>
-        <input
+        <Input
+          label="Report Name *"
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(event) => setName(event.target.value)}
           placeholder="e.g. Q1 2026 Invoices"
-          style={inputStyle}
           autoFocus
         />
       </div>
 
       {/* Description */}
       <div style={fieldStyle}>
-        <label style={labelStyle}>Description</label>
-        <textarea
+        <Textarea
+          label="Description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(event) => setDescription(event.target.value)}
           placeholder="Optional description for this report..."
-          style={textareaStyle}
+          style={{ minHeight: '88px' }}
         />
       </div>
 
       {/* Date Behaviour — only show if there are active date filters and not hidden */}
       {!hideDateBehaviour && activeDateKeys.length > 0 && (
         <div style={fieldStyle}>
-          <label style={labelStyle}>Date Behaviour</label>
-          <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '0 0 8px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text-label)' }}>
+            Date Behaviour
+          </div>
+          <p style={{ ...helperTextStyle, margin: '0 0 8px' }}>
             Choose whether date filters stay fixed or update dynamically each time you open this report.
           </p>
           {activeDateKeys.map((key) => {
@@ -293,7 +265,7 @@ export default function SaveReportModal({
             };
             return (
               <div key={key} style={dateFieldRowStyle}>
-                <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
+                <div style={rowTitleStyle}>
                   {DATE_FIELD_LABELS[key] || key}
                 </div>
                 <RadioGroup
@@ -319,7 +291,7 @@ export default function SaveReportModal({
                   }}
                 />
                 {config.dateBehaviour === 'fixed' && filters[key] && (
-                  <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '8px' }}>
+                  <div style={{ ...helperTextStyle, marginTop: '10px' }}>
                     Fixed: {filters[key].$gte} to {filters[key].$lte}
                   </div>
                 )}
@@ -362,7 +334,7 @@ export default function SaveReportModal({
                     {config.dynamicPreset === 'custom_period' && (() => {
                       const ci = customInputs[key] || { direction: 'next', number: 7, unit: 'days' };
                       return (
-                        <div style={{ display: 'flex', gap: '6px', marginTop: '8px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px', alignItems: 'center' }}>
                           <select
                             value={ci.direction}
                             onChange={(e) => updateCustomInput(key, 'direction', e.target.value)}

@@ -12,6 +12,7 @@ import {
 import type { InvoiceRow, SortParam } from '@/types';
 import { allColumns } from './columns';
 import ColumnVisibilityDropdown from './ColumnVisibilityDropdown';
+import Button from '@/components/ui/Button';
 
 // ── Props ──────────────────────────────────────────────────────────
 
@@ -31,8 +32,9 @@ interface InvoiceTableProps {
 const tableContainerStyle: CSSProperties = {
   overflowX: 'auto',
   border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
+  borderRadius: 'var(--radius-card)',
   background: 'var(--color-bg-card)',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
 };
 
 const tableStyle: CSSProperties = {
@@ -43,7 +45,7 @@ const tableStyle: CSSProperties = {
 };
 
 const thStyle: CSSProperties = {
-  padding: '8px 12px',
+  padding: '10px 12px',
   textAlign: 'left',
   fontWeight: 500,
   fontSize: '14px',
@@ -60,7 +62,7 @@ const thStyle: CSSProperties = {
 };
 
 const tdStyle: CSSProperties = {
-  padding: '8px 12px',
+  padding: '10px 12px',
   borderBottom: '1px solid var(--color-border)',
   color: 'var(--color-text-primary)',
   whiteSpace: 'nowrap',
@@ -72,18 +74,7 @@ const paginationStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '12px 0',
-};
-
-const pageBtnStyle: CSSProperties = {
-  padding: '6px 12px',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-tag)',
-  background: 'var(--color-bg-card)',
-  fontSize: '13px',
-  color: 'var(--color-text-primary)',
-  cursor: 'pointer',
-  letterSpacing: '-0.25px',
+  padding: '14px 0 4px',
 };
 
 const resizeHandleStyle: CSSProperties = {
@@ -180,10 +171,13 @@ export default function InvoiceTable({
     return (
       <div
         style={{
-          padding: '48px',
+          padding: '56px 24px',
           textAlign: 'center',
           color: 'var(--color-text-secondary)',
           fontSize: '14px',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-card)',
+          background: 'var(--color-bg-card)',
         }}
       >
         Loading invoices...
@@ -195,10 +189,10 @@ export default function InvoiceTable({
     return (
       <div
         style={{
-          padding: '48px',
+          padding: '56px 24px',
           textAlign: 'center',
           border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-input)',
+          borderRadius: 'var(--radius-card)',
           background: 'var(--color-bg-card)',
         }}
       >
@@ -380,18 +374,14 @@ export default function InvoiceTable({
           {loading && ' (loading...)'}
         </span>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            type="button"
-            style={{
-              ...pageBtnStyle,
-              opacity: page === 0 ? 0.4 : 1,
-              cursor: page === 0 ? 'not-allowed' : 'pointer',
-            }}
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => page > 0 && setPage(page - 1)}
             disabled={page === 0}
           >
             &#x2190; Prev
-          </button>
+          </Button>
           <span
             style={{
               display: 'flex',
@@ -403,18 +393,14 @@ export default function InvoiceTable({
           >
             Page {page + 1} of {totalPages || 1}
           </span>
-          <button
-            type="button"
-            style={{
-              ...pageBtnStyle,
-              opacity: page >= totalPages - 1 ? 0.4 : 1,
-              cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer',
-            }}
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => page < totalPages - 1 && setPage(page + 1)}
             disabled={page >= totalPages - 1}
           >
             Next &#x2192;
-          </button>
+          </Button>
         </div>
       </div>
     </div>

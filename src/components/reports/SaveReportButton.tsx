@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import SplitButton from '@/components/ui/SplitButton';
+import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import SaveReportModal from './SaveReportModal';
 import type { SavedQuery, SystemReport, DateFieldConfig } from '@/types';
 import { buildSavedQueryPayload } from '@/lib/saved-query-contract';
@@ -136,102 +138,49 @@ export default function SaveReportButton({
           onSelect={handleDropdownSelect}
         />
       ) : (
-        <button
-          onClick={primary.action}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '8px 16px',
-            background: 'var(--color-cta-primary)',
-            color: 'var(--color-bg-card)',
-            border: 'none',
-            borderRadius: 'var(--radius-input)',
-            fontSize: '14px',
-            fontWeight: 500,
-            letterSpacing: '-0.25px',
-            cursor: 'pointer',
-          }}
-        >
+        <Button onClick={primary.action}>
           {primary.label}
-        </button>
+        </Button>
       )}
 
       {/* Save / Save As / Edit Modal */}
-        <SaveReportModal
-          open={modalMode !== null}
-          onClose={() => setModalMode(null)}
-          onSave={handleModalSave}
-          filters={filters}
-          existingReport={editableReport}
-          saveAsNew={modalMode === 'save-as' || modalMode === 'create'}
-        />
+      <SaveReportModal
+        open={modalMode !== null}
+        onClose={() => setModalMode(null)}
+        onSave={handleModalSave}
+        filters={filters}
+        existingReport={editableReport}
+        saveAsNew={modalMode === 'save-as' || modalMode === 'create'}
+      />
 
       {/* Delete Confirmation */}
       {confirmDelete && editableReport && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'var(--color-overlay)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 55,
-          }}
-          onClick={(e) => e.target === e.currentTarget && setConfirmDelete(false)}
-        >
-          <div
-            style={{
-              background: 'var(--color-bg-card)',
-              borderRadius: 'var(--radius-modal)',
-              padding: '24px',
-              width: '400px',
-              boxShadow: 'var(--shadow-modal)',
-            }}
-          >
-            <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--color-text-primary)', margin: '0 0 8px' }}>
-              Delete Report
-            </h3>
-            <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', margin: '0 0 20px' }}>
-              Are you sure you want to delete &ldquo;{editableReport.displayName}&rdquo;? This action cannot be undone.
-            </p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setConfirmDelete(false)}
-                style={{
-                  padding: '8px 16px',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--radius-input)',
-                  background: 'var(--color-bg-card)',
-                  color: 'var(--color-text-primary)',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                }}
-              >
+        <Modal
+          open={confirmDelete}
+          onClose={() => setConfirmDelete(false)}
+          title="Delete Report"
+          width={420}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 onClick={async () => {
                   await onDeleteReport(editableReport._id);
                   setConfirmDelete(false);
                 }}
-                style={{
-                  padding: '8px 16px',
-                  border: 'none',
-                  borderRadius: 'var(--radius-input)',
-                  background: 'var(--color-error)',
-                  color: 'var(--color-bg-card)',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
               >
                 Delete
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </>
+          }
+        >
+          <p style={{ margin: 0, fontSize: '14px', lineHeight: '24px', color: 'var(--color-text-secondary)' }}>
+            Are you sure you want to delete &ldquo;{editableReport.displayName}&rdquo;? This action cannot be undone.
+          </p>
+        </Modal>
       )}
     </>
   );

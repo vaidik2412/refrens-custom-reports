@@ -16,8 +16,9 @@ const triggerStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: '8px',
-  padding: '8px 14px',
-  border: '1px solid var(--color-border)',
+  minHeight: 'var(--height-input)',
+  padding: '0 14px',
+  border: '1px solid var(--color-border-strong)',
   borderRadius: 'var(--radius-input)',
   fontSize: '14px',
   fontWeight: 500,
@@ -28,42 +29,43 @@ const triggerStyle: CSSProperties = {
   letterSpacing: '-0.25px',
   minWidth: '200px',
   justifyContent: 'space-between',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
 };
 
 const menuStyle: CSSProperties = {
   position: 'absolute',
-  top: 'calc(100% + 4px)',
+  top: 'calc(100% + 6px)',
   left: 0,
   background: 'var(--color-bg-card)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  boxShadow: 'var(--shadow-l1)',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: '12px',
+  boxShadow: 'var(--shadow-popover)',
   zIndex: 50,
   minWidth: '300px',
   maxHeight: '420px',
   overflowY: 'auto',
-  padding: '4px 0',
+  padding: '6px 0',
 };
 
 const sectionLabelStyle: CSSProperties = {
-  padding: '8px 12px 4px',
-  fontSize: '10px',
+  padding: '10px 12px 6px',
+  fontSize: '11px',
   fontWeight: 600,
   color: 'var(--color-text-secondary)',
   textTransform: 'uppercase',
-  letterSpacing: '0.8px',
+  letterSpacing: '0.5px',
 };
 
 const itemStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '8px',
-  padding: '8px 12px',
+  padding: '9px 12px',
   fontSize: '13px',
   color: 'var(--color-text-primary)',
   cursor: 'pointer',
   border: 'none',
-  background: 'none',
+  background: 'transparent',
   width: '100%',
   textAlign: 'left',
   letterSpacing: '-0.25px',
@@ -72,27 +74,28 @@ const itemStyle: CSSProperties = {
 const dividerStyle: CSSProperties = {
   height: '1px',
   background: 'var(--color-border)',
-  margin: '4px 0',
+  margin: '6px 0',
 };
 
 const nobHeaderStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '6px',
-  padding: '6px 12px',
+  padding: '8px 12px',
   fontSize: '12px',
-  fontWeight: 500,
+  fontWeight: 600,
   color: 'var(--color-text-secondary)',
   cursor: 'pointer',
   border: 'none',
-  background: 'none',
+  background: 'transparent',
   width: '100%',
   textAlign: 'left',
+  letterSpacing: '-0.15px',
 };
 
 const nobItemStyle: CSSProperties = {
   ...itemStyle,
-  paddingLeft: '28px',
+  paddingLeft: '30px',
   fontSize: '13px',
 };
 
@@ -204,18 +207,19 @@ export default function ReportSelectorDropdown({
       style={{
         ...style,
         fontWeight: activeId === id ? 500 : 400,
-        background: activeId === id ? 'var(--color-bg-alt)' : 'none',
+        background: activeId === id ? 'var(--color-menu-selected)' : 'transparent',
       }}
       onClick={() => {
         onSelectReport(report);
         setOpen(false);
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)';
+        (e.currentTarget as HTMLElement).style.background =
+          activeId === id ? 'var(--color-menu-selected)' : 'var(--color-menu-hover)';
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLElement).style.background =
-          activeId === id ? 'var(--color-bg-alt)' : 'none';
+          activeId === id ? 'var(--color-menu-selected)' : 'transparent';
       }}
     >
       <span style={{ flex: 1 }}>{label}</span>
@@ -241,7 +245,8 @@ export default function ReportSelectorDropdown({
       <button
         style={{
           ...triggerStyle,
-          borderColor: open ? 'var(--color-cta-primary)' : 'var(--color-border)',
+          borderColor: open ? 'var(--color-border-input-focus)' : 'var(--color-border-strong)',
+          boxShadow: open ? 'var(--shadow-focus)' : triggerStyle.boxShadow,
         }}
         onClick={() => setOpen(!open)}
       >
@@ -268,11 +273,11 @@ export default function ReportSelectorDropdown({
               setOpen(false);
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)';
+              (e.currentTarget as HTMLElement).style.background = 'var(--color-menu-hover)';
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLElement).style.background =
-                !activeReport ? 'var(--color-bg-alt)' : 'none';
+                !activeReport ? 'var(--color-menu-selected)' : 'transparent';
             }}
           >
             All Invoices
@@ -303,6 +308,7 @@ export default function ReportSelectorDropdown({
                         color: hasActiveChild
                           ? 'var(--color-cta-primary)'
                           : 'var(--color-text-secondary)',
+                        background: hasActiveChild ? 'var(--color-menu-selected)' : 'transparent',
                       }}
                       onClick={() => toggleNob(group.nob)}
                     >

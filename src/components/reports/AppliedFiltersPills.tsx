@@ -2,6 +2,7 @@
 
 import { CSSProperties } from 'react';
 import Pill from '@/components/ui/Pill';
+import Button from '@/components/ui/Button';
 import { getFilterLabel, formatFilterValue } from '@/lib/constants';
 
 interface AppliedFiltersPillsProps {
@@ -19,14 +20,7 @@ const containerStyle: CSSProperties = {
 };
 
 const clearAllStyle: CSSProperties = {
-  background: 'none',
-  border: 'none',
-  fontSize: '12px',
-  color: 'var(--color-text-secondary)',
-  cursor: 'pointer',
-  padding: '4px 8px',
-  textDecoration: 'underline',
-  letterSpacing: '-0.25px',
+  marginLeft: '4px',
 };
 
 // Keys that are internal / not user-facing filters
@@ -60,7 +54,7 @@ export default function AppliedFiltersPills({
 
   return (
     <div style={containerStyle}>
-      <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 500, marginRight: '4px' }}>
+      <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 600, marginRight: '4px' }}>
         Filters:
       </span>
       {entries.map(([key, value]) => (
@@ -73,9 +67,9 @@ export default function AppliedFiltersPills({
         />
       ))}
       {entries.length > 1 && (
-        <button style={clearAllStyle} onClick={clearFilters}>
+        <Button variant="ghost" size="sm" style={clearAllStyle} onClick={clearFilters}>
           Clear all
-        </button>
+        </Button>
       )}
     </div>
   );
