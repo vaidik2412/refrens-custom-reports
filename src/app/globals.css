@@ -10,18 +10,24 @@
   --color-text-column: #686F78;
   --color-text-secondary: #8B95A1;
   --color-icon-border: #C7CDD6;
+  --color-icon-muted: #A9B1BA;
   --color-border-subtle: #DCE0E3;
   --color-tab-underline-bg: #E8EAED;
   --color-border: #EEF2F5;
+  --color-border-strong: #DCE0E3;
   --color-drawer-border: #EFF2F6;
   --color-bg-alt: #F7F9FA;
   --color-bg-card: #FFFFFF;
+  --color-bg-hover: #F7F9FA;
+  --color-bg-pressed: #F1F4F8;
 
   /* Brand / Accent */
   --color-brand-purple: #7B3EFF;
   --color-brand-purple-hover: #8736E7;
   --color-cta-primary: #7B3EFF;
   --color-cta-primary-hover: #8736E7;
+  --color-cta-soft-bg: rgba(123, 62, 255, 0.08);
+  --color-cta-soft-border: rgba(123, 62, 255, 0.16);
 
   /* Token Chip */
   --color-chip-bg: #F7F3FD;
@@ -48,9 +54,13 @@
   /* Overlay & Input borders */
   --color-overlay: rgba(0, 0, 0, 0.4);
   --color-border-input: rgba(0, 0, 0, 0.15);
+  --color-border-input-hover: #C7CDD6;
+  --color-border-input-focus: #7B3EFF;
   --color-border-modal: #F3F4F6;
   --color-bg-secondary: #F9FAFB;
   --color-row-hover: #F5F3FF;
+  --color-menu-hover: #F7F9FA;
+  --color-menu-selected: rgba(123, 62, 255, 0.08);
 
   /* Error banner */
   --color-error-banner-bg: #FFF6F3;
@@ -78,12 +88,15 @@
   --shadow-drawer: -4px 0 24px rgba(20, 28, 39, 0.12);
   --shadow-focus: 0 0 0 3px rgba(123, 62, 255, 0.1);
   --shadow-toggle-thumb: 0 1px 3px rgba(0, 0, 0, 0.15);
+  --shadow-popover: 0px 2px 8px rgba(20, 28, 39, 0.12);
 
   /* Sizing */
   --width-modal: 560px;
   --width-drawer: 896px;
   --height-table-row: 40px;
   --height-button: 36px;
+  --height-button-sm: 32px;
+  --height-input: 40px;
   --height-drawer-header: 72px;
 
   /* Spacing (8px grid) */
@@ -129,6 +142,12 @@ input, textarea, select {
   font-family: inherit;
   font-size: inherit;
   letter-spacing: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 1;
 }
 
 /* Scrollbar styling */
