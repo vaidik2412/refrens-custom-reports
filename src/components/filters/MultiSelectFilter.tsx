@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useState, useRef, useEffect } from 'react';
+import { CSSProperties, useEffect, useRef, useState } from 'react';
 import { useAsyncSuggestions } from '@/hooks/useAsyncSuggestions';
 
 interface MultiSelectFilterProps {
@@ -16,51 +16,89 @@ interface MultiSelectFilterProps {
   onOperatorChange?: (operator: '$in' | '$nin' | '$all') => void;
 }
 
+const labelStyle: CSSProperties = {
+  marginBottom: '6px',
+  fontSize: '11px',
+  fontWeight: 600,
+  lineHeight: '16px',
+  letterSpacing: '0.5px',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-secondary)',
+};
+
 const triggerStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '6px',
-  padding: '6px 10px',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  fontSize: '13px',
-  color: 'var(--color-text-primary)',
-  background: 'var(--color-bg-card)',
-  cursor: 'pointer',
-  whiteSpace: 'nowrap',
-  letterSpacing: '-0.25px',
-  minWidth: '120px',
   justifyContent: 'space-between',
+  gap: '8px',
+  minWidth: '150px',
+  minHeight: 'var(--height-input)',
+  padding: '0 12px',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: 'var(--radius-input)',
+  background: 'var(--color-bg-card)',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
+  fontSize: '13px',
+  lineHeight: '20px',
+  letterSpacing: '-0.25px',
 };
 
 const menuStyle: CSSProperties = {
   position: 'absolute',
-  top: 'calc(100% + 4px)',
+  top: 'calc(100% + 6px)',
   left: 0,
-  background: 'var(--color-bg-card)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  boxShadow: 'var(--shadow-l1)',
-  zIndex: 40,
-  minWidth: '220px',
-  maxHeight: '280px',
+  minWidth: '260px',
+  maxHeight: '320px',
   overflowY: 'auto',
-  padding: '4px 0',
+  padding: '8px 0',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: '12px',
+  background: 'var(--color-bg-card)',
+  boxShadow: 'var(--shadow-popover)',
+  zIndex: 60,
 };
 
-const checkItemStyle: CSSProperties = {
+const searchInputStyle: CSSProperties = {
+  width: '100%',
+  minHeight: 'var(--height-input)',
+  padding: '8px 12px',
+  border: '1px solid var(--color-border-input)',
+  borderRadius: 'var(--radius-input)',
+  background: 'var(--color-bg-card)',
+  fontSize: '13px',
+  lineHeight: '20px',
+  color: 'var(--color-text-primary)',
+};
+
+const itemStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
-  padding: '7px 12px',
-  fontSize: '13px',
-  color: 'var(--color-text-primary)',
-  cursor: 'pointer',
-  border: 'none',
-  background: 'none',
+  gap: '10px',
   width: '100%',
+  padding: '9px 12px',
+  border: 'none',
+  background: 'transparent',
   textAlign: 'left',
+  fontSize: '13px',
+  lineHeight: '20px',
+  letterSpacing: '-0.25px',
+  color: 'var(--color-text-primary)',
 };
+
+const checkStyle = (checked: boolean): CSSProperties => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '16px',
+  height: '16px',
+  border: '1.5px solid',
+  borderColor: checked ? 'var(--color-cta-primary)' : 'var(--color-icon-border)',
+  borderRadius: '4px',
+  background: checked ? 'var(--color-cta-primary)' : 'transparent',
+  color: 'var(--color-bg-card)',
+  fontSize: '11px',
+  flexShrink: 0,
+});
 
 export default function MultiSelectFilter({
   label,
@@ -80,26 +118,35 @@ export default function MultiSelectFilter({
   const { results: remoteOptions, loading } = useAsyncSuggestions(searchEndpoint, open, input);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    const handleClick = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
     };
+
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
   }, []);
 
-  const toggle = (v: string) => {
-    if (value.includes(v)) {
-      onChange(value.filter((x) => x !== v));
-    } else {
-      onChange([...value, v]);
+  const toggle = (nextValue: string) => {
+    if (value.includes(nextValue)) {
+      onChange(value.filter((existing) => existing !== nextValue));
+      return;
     }
+
+    onChange([...value, nextValue]);
   };
 
   const addFreeText = () => {
     const trimmed = input.trim();
+
     if (trimmed && !value.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
       onChange([...value, trimmed]);
     }
+
     setInput('');
   };
 
@@ -107,6 +154,7 @@ export default function MultiSelectFilter({
     if (allowFreeText && input.trim()) {
       addFreeText();
     }
+
     window.setTimeout(() => {
       if (ref.current && !ref.current.contains(document.activeElement)) {
         setOpen(false);
@@ -116,13 +164,14 @@ export default function MultiSelectFilter({
 
   const filteredOptions = searchEndpoint
     ? remoteOptions
-    : options.filter((o) => o.label.toLowerCase().includes(input.toLowerCase()));
+    : options.filter((option) => option.label.toLowerCase().includes(input.toLowerCase()));
 
   const seen = new Set<string>();
   const displayedOptions = filteredOptions.filter((option) => {
     if (seen.has(option.value)) {
       return false;
     }
+
     seen.add(option.value);
     return true;
   });
@@ -136,37 +185,28 @@ export default function MultiSelectFilter({
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        {label}
-      </div>
+      <div style={labelStyle}>{label}</div>
       <button
         type="button"
         style={{
           ...triggerStyle,
+          borderColor: open ? 'var(--color-border-input-focus)' : 'var(--color-border-strong)',
+          boxShadow: open ? 'var(--shadow-focus)' : triggerStyle.boxShadow,
           color: value.length > 0 ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-          borderColor: open ? 'var(--color-cta-primary)' : 'var(--color-border)',
         }}
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((current) => !current)}
       >
         <span>{value.length > 0 ? `${value.length} selected` : placeholder || 'Select...'}</span>
-        <span style={{ fontSize: '10px', opacity: 0.5 }}>&#x25BC;</span>
+        <span style={{ fontSize: '10px', color: 'var(--color-icon-muted)' }}>&#x25BE;</span>
       </button>
-      {open && (
+      {open ? (
         <div style={menuStyle}>
-          {operatorOptions && operatorOptions.length > 1 && onOperatorChange && (
-            <div style={{ padding: '8px 8px 0' }}>
+          {operatorOptions && operatorOptions.length > 1 && onOperatorChange ? (
+            <div style={{ padding: '0 12px 8px' }}>
               <select
                 value={operator}
-                onChange={(e) => onOperatorChange(e.target.value as '$in' | '$all')}
-                style={{
-                  width: '100%',
-                  padding: '6px 8px',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--radius-tag)',
-                  fontSize: '13px',
-                  background: 'var(--color-bg-card)',
-                  outline: 'none',
-                }}
+                onChange={(event) => onOperatorChange(event.target.value as '$in' | '$nin' | '$all')}
+                style={searchInputStyle}
               >
                 {operatorOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -175,109 +215,112 @@ export default function MultiSelectFilter({
                 ))}
               </select>
             </div>
-          )}
-          <div style={{ padding: '4px 8px' }}>
+          ) : null}
+          <div style={{ padding: '0 12px 8px' }}>
             <input
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && allowFreeText) addFreeText();
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && allowFreeText) {
+                  addFreeText();
+                }
               }}
               onBlur={handleInputBlur}
               placeholder={
-                allowFreeText
-                  ? 'Search or add...'
-                  : searchEndpoint
-                    ? 'Search or browse...'
-                    : 'Filter...'
+                allowFreeText ? 'Search or add...' : searchEndpoint ? 'Search or browse...' : 'Filter...'
               }
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-tag)',
-                fontSize: '13px',
-                outline: 'none',
-              }}
+              style={searchInputStyle}
               autoFocus
             />
           </div>
-          {hasPendingFreeText && (
+          {hasPendingFreeText ? (
             <button
               type="button"
-              style={{ ...checkItemStyle, fontStyle: 'italic' }}
-              onMouseDown={(e) => e.preventDefault()}
+              style={{ ...itemStyle, fontStyle: 'italic' }}
+              onMouseDown={(event) => event.preventDefault()}
               onClick={addFreeText}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.background = 'var(--color-menu-hover)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.background = 'transparent';
+              }}
             >
               Add &ldquo;{pendingFreeText}&rdquo;
             </button>
-          )}
-          {value.length > 0 && (
+          ) : null}
+          {value.length > 0 ? (
             <button
               type="button"
-              style={{ ...checkItemStyle, color: 'var(--color-text-secondary)', fontStyle: 'italic', fontSize: '12px' }}
-              onMouseDown={(e) => e.preventDefault()}
+              style={{ ...itemStyle, color: 'var(--color-text-secondary)', fontStyle: 'italic' }}
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => onChange([])}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.background = 'var(--color-menu-hover)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.background = 'transparent';
+              }}
             >
               Clear all
             </button>
-          )}
-          {loading && (
-            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+          ) : null}
+          {loading ? (
+            <div style={{ padding: '9px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
               Loading...
             </div>
-          )}
-          {!loading && displayedOptions.length === 0 && !hasPendingFreeText && (
-            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+          ) : null}
+          {!loading && displayedOptions.length === 0 && !hasPendingFreeText ? (
+            <div style={{ padding: '9px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
               No results
             </div>
-          )}
-          {displayedOptions.map((opt) => (
-            <button
-              type="button"
-              key={opt.value}
-              style={checkItemStyle}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => toggle(opt.value)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
-            >
-              <span style={{
-                width: '16px', height: '16px', border: '1.5px solid',
-                borderColor: value.includes(opt.value) ? 'var(--color-cta-primary)' : 'var(--color-icon-border)',
-                borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: value.includes(opt.value) ? 'var(--color-cta-primary)' : 'transparent',
-                color: 'var(--color-bg-card)', fontSize: '11px', flexShrink: 0,
-              }}>
-                {value.includes(opt.value) && '\u2713'}
-              </span>
-              {opt.label}
-            </button>
-          ))}
-          {/* Show free-text values that aren't in options */}
-          {value
-            .filter((v) => !displayedOptions.find((o) => o.value === v))
-            .map((v) => (
+          ) : null}
+          {displayedOptions.map((option) => {
+            const checked = value.includes(option.value);
+
+            return (
               <button
                 type="button"
-                key={v}
-                style={checkItemStyle}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => toggle(v)}
+                key={option.value}
+                style={{
+                  ...itemStyle,
+                  background: checked ? 'var(--color-menu-selected)' : 'transparent',
+                }}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => toggle(option.value)}
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.background = checked
+                    ? 'var(--color-menu-selected)'
+                    : 'var(--color-menu-hover)';
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.background = checked
+                    ? 'var(--color-menu-selected)'
+                    : 'transparent';
+                }}
               >
-                <span style={{
-                  width: '16px', height: '16px', border: '1.5px solid var(--color-cta-primary)',
-                  borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'var(--color-cta-primary)', color: 'var(--color-bg-card)', fontSize: '11px', flexShrink: 0,
-                }}>
-                  {'\u2713'}
-                </span>
-                {v}
+                <span style={checkStyle(checked)}>{checked ? '\u2713' : null}</span>
+                {option.label}
+              </button>
+            );
+          })}
+          {value
+            .filter((selected) => !displayedOptions.find((option) => option.value === selected))
+            .map((selected) => (
+              <button
+                type="button"
+                key={selected}
+                style={{ ...itemStyle, background: 'var(--color-menu-selected)' }}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => toggle(selected)}
+              >
+                <span style={checkStyle(true)}>{'\u2713'}</span>
+                {selected}
               </button>
             ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

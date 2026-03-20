@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useState, useRef, useEffect } from 'react';
+import { CSSProperties, useEffect, useRef, useState } from 'react';
 import { useAsyncSuggestions } from '@/hooks/useAsyncSuggestions';
 import type { ClientOption } from '@/types';
 
@@ -8,56 +8,94 @@ interface SearchSelectFilterProps {
   label: string;
   value: { $in: string[]; $inOptions: ClientOption[] } | undefined;
   onChange: (value: { $in: string[]; $inOptions: ClientOption[] } | undefined) => void;
-  searchEndpoint: string; // e.g. '/api/clients/search'
+  searchEndpoint: string;
   placeholder?: string;
   multi?: boolean;
 }
 
+const labelStyle: CSSProperties = {
+  marginBottom: '6px',
+  fontSize: '11px',
+  fontWeight: 600,
+  lineHeight: '16px',
+  letterSpacing: '0.5px',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-secondary)',
+};
+
 const triggerStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '6px',
-  padding: '6px 10px',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  fontSize: '13px',
-  color: 'var(--color-text-primary)',
-  background: 'var(--color-bg-card)',
-  cursor: 'pointer',
-  whiteSpace: 'nowrap',
-  letterSpacing: '-0.25px',
-  minWidth: '140px',
   justifyContent: 'space-between',
+  gap: '8px',
+  minWidth: '170px',
+  minHeight: 'var(--height-input)',
+  padding: '0 12px',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: 'var(--radius-input)',
+  background: 'var(--color-bg-card)',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
+  fontSize: '13px',
+  lineHeight: '20px',
+  letterSpacing: '-0.25px',
 };
 
 const menuStyle: CSSProperties = {
   position: 'absolute',
-  top: 'calc(100% + 4px)',
+  top: 'calc(100% + 6px)',
   left: 0,
-  background: 'var(--color-bg-card)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  boxShadow: 'var(--shadow-l1)',
-  zIndex: 40,
-  minWidth: '240px',
-  maxHeight: '280px',
+  minWidth: '280px',
+  maxHeight: '320px',
   overflowY: 'auto',
-  padding: '4px 0',
+  padding: '8px 0',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: '12px',
+  background: 'var(--color-bg-card)',
+  boxShadow: 'var(--shadow-popover)',
+  zIndex: 60,
 };
 
-const optStyle: CSSProperties = {
+const searchInputStyle: CSSProperties = {
+  width: '100%',
+  minHeight: 'var(--height-input)',
+  padding: '8px 12px',
+  border: '1px solid var(--color-border-input)',
+  borderRadius: 'var(--radius-input)',
+  background: 'var(--color-bg-card)',
+  fontSize: '13px',
+  lineHeight: '20px',
+  color: 'var(--color-text-primary)',
+};
+
+const itemStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
-  padding: '7px 12px',
-  fontSize: '13px',
-  color: 'var(--color-text-primary)',
-  cursor: 'pointer',
-  border: 'none',
-  background: 'none',
+  gap: '10px',
   width: '100%',
+  padding: '9px 12px',
+  border: 'none',
+  background: 'transparent',
   textAlign: 'left',
+  fontSize: '13px',
+  lineHeight: '20px',
+  letterSpacing: '-0.25px',
+  color: 'var(--color-text-primary)',
 };
+
+const checkStyle = (checked: boolean): CSSProperties => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '16px',
+  height: '16px',
+  border: '1.5px solid',
+  borderColor: checked ? 'var(--color-cta-primary)' : 'var(--color-icon-border)',
+  borderRadius: '4px',
+  background: checked ? 'var(--color-cta-primary)' : 'transparent',
+  color: 'var(--color-bg-card)',
+  fontSize: '11px',
+  flexShrink: 0,
+});
 
 export default function SearchSelectFilter({
   label,
@@ -73,129 +111,135 @@ export default function SearchSelectFilter({
   const { results, loading } = useAsyncSuggestions<ClientOption>(searchEndpoint, open, query);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    const handleClick = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
     };
+
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
   }, []);
 
   const selectedIds = value?.$in || [];
   const selectedOptions = value?.$inOptions || [];
 
-  const toggleOption = (opt: ClientOption) => {
-    if (selectedIds.includes(opt.value)) {
-      const newIds = selectedIds.filter((id) => id !== opt.value);
-      const newOpts = selectedOptions.filter((o) => o.value !== opt.value);
-      onChange(newIds.length > 0 ? { $in: newIds, $inOptions: newOpts } : undefined);
-    } else {
-      if (multi) {
-        onChange({
-          $in: [...selectedIds, opt.value],
-          $inOptions: [...selectedOptions, opt],
-        });
-      } else {
-        onChange({ $in: [opt.value], $inOptions: [opt] });
-        setOpen(false);
-      }
+  const toggleOption = (option: ClientOption) => {
+    if (selectedIds.includes(option.value)) {
+      const nextIds = selectedIds.filter((id) => id !== option.value);
+      const nextOptions = selectedOptions.filter((selected) => selected.value !== option.value);
+      onChange(nextIds.length > 0 ? { $in: nextIds, $inOptions: nextOptions } : undefined);
+      return;
     }
+
+    if (multi) {
+      onChange({
+        $in: [...selectedIds, option.value],
+        $inOptions: [...selectedOptions, option],
+      });
+      return;
+    }
+
+    onChange({ $in: [option.value], $inOptions: [option] });
+    setOpen(false);
   };
 
   const displayText =
-    selectedOptions.length > 0
-      ? selectedOptions.map((o) => o.label).join(', ')
-      : null;
+    selectedOptions.length > 0 ? selectedOptions.map((option) => option.label).join(', ') : null;
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        {label}
-      </div>
+      <div style={labelStyle}>{label}</div>
       <button
         type="button"
         style={{
           ...triggerStyle,
+          borderColor: open ? 'var(--color-border-input-focus)' : 'var(--color-border-strong)',
+          boxShadow: open ? 'var(--shadow-focus)' : triggerStyle.boxShadow,
           color: displayText ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-          borderColor: open ? 'var(--color-cta-primary)' : 'var(--color-border)',
         }}
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((current) => !current)}
       >
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px' }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>
           {displayText || placeholder || 'Search...'}
         </span>
-        <span style={{ fontSize: '10px', opacity: 0.5 }}>&#x25BC;</span>
+        <span style={{ fontSize: '10px', color: 'var(--color-icon-muted)' }}>&#x25BE;</span>
       </button>
-      {open && (
+      {open ? (
         <div style={menuStyle}>
-          <div style={{ padding: '4px 8px' }}>
+          <div style={{ padding: '0 12px 8px' }}>
             <input
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(event) => setQuery(event.target.value)}
               placeholder="Search or browse..."
-              style={{
-                width: '100%', padding: '6px 8px',
-                border: '1px solid var(--color-border)', borderRadius: 'var(--radius-tag)',
-                fontSize: '13px', outline: 'none',
-              }}
+              style={searchInputStyle}
               autoFocus
             />
           </div>
-          {selectedIds.length > 0 && (
+          {selectedIds.length > 0 ? (
             <button
               type="button"
-              style={{ ...optStyle, color: 'var(--color-text-secondary)', fontStyle: 'italic', fontSize: '12px' }}
-              onClick={() => { onChange(undefined); }}
+              style={{ ...itemStyle, color: 'var(--color-text-secondary)', fontStyle: 'italic' }}
+              onClick={() => onChange(undefined)}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.background = 'var(--color-menu-hover)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.background = 'transparent';
+              }}
             >
               Clear all
             </button>
-          )}
-          {!loading && query.trim() === '' && results.length > 0 && (
-            <div style={{ padding: '8px 12px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          ) : null}
+          {!loading && query.trim() === '' && results.length > 0 ? (
+            <div style={{ padding: '0 12px 8px', fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Suggested clients
             </div>
-          )}
-          {loading && (
-            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+          ) : null}
+          {loading ? (
+            <div style={{ padding: '9px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
               Loading...
             </div>
-          )}
-          {!loading && results.length === 0 && (
-            <div style={{ padding: '8px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+          ) : null}
+          {!loading && results.length === 0 ? (
+            <div style={{ padding: '9px 12px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
               {query.trim() ? 'No results' : 'No suggestions'}
             </div>
-          )}
-          {results.map((opt) => (
-            <button
-              type="button"
-              key={opt.value}
-              style={{
-                ...optStyle,
-                background: selectedIds.includes(opt.value) ? 'var(--color-bg-alt)' : 'none',
-              }}
-              onClick={() => toggleOption(opt)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-bg-alt)'; }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background =
-                  selectedIds.includes(opt.value) ? 'var(--color-bg-alt)' : 'none';
-              }}
-            >
-              {multi && (
-                <span style={{
-                  width: '16px', height: '16px', border: '1.5px solid',
-                  borderColor: selectedIds.includes(opt.value) ? 'var(--color-cta-primary)' : 'var(--color-icon-border)',
-                  borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: selectedIds.includes(opt.value) ? 'var(--color-cta-primary)' : 'transparent',
-                  color: 'var(--color-bg-card)', fontSize: '11px', flexShrink: 0,
-                }}>
-                  {selectedIds.includes(opt.value) && '\u2713'}
-                </span>
-              )}
-              {opt.label}
-            </button>
-          ))}
+          ) : null}
+          {results.map((option) => {
+            const checked = selectedIds.includes(option.value);
+
+            return (
+              <button
+                type="button"
+                key={option.value}
+                style={{
+                  ...itemStyle,
+                  background: checked ? 'var(--color-menu-selected)' : 'transparent',
+                }}
+                onClick={() => toggleOption(option)}
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.background = checked
+                    ? 'var(--color-menu-selected)'
+                    : 'var(--color-menu-hover)';
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.background = checked
+                    ? 'var(--color-menu-selected)'
+                    : 'transparent';
+                }}
+              >
+                {multi ? <span style={checkStyle(checked)}>{checked ? '\u2713' : null}</span> : null}
+                {option.label}
+              </button>
+            );
+          })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

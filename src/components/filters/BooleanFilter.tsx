@@ -12,38 +12,44 @@ const containerStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '8px 0',
+  minHeight: 'var(--height-input)',
+  padding: '0 4px 0 0',
   gap: '12px',
 };
 
 const labelStyle: CSSProperties = {
   fontSize: '13px',
-  fontWeight: 400,
-  color: 'var(--color-text-primary)',
+  lineHeight: '20px',
   letterSpacing: '-0.25px',
+  color: 'var(--color-text-primary)',
 };
 
-const toggleTrackStyle: CSSProperties = {
-  width: '36px',
-  height: '20px',
-  borderRadius: '10px',
-  cursor: 'pointer',
-  transition: 'background 0.2s',
+const stateStyle: CSSProperties = {
+  marginLeft: '6px',
+  fontSize: '11px',
+  fontWeight: 500,
+  color: 'var(--color-text-secondary)',
+};
+
+const trackStyle: CSSProperties = {
   position: 'relative',
+  width: '40px',
+  height: '22px',
   border: 'none',
+  borderRadius: '999px',
   padding: 0,
-  flexShrink: 0,
+  transition: 'background-color 0.16s ease',
 };
 
-const toggleThumbStyle: CSSProperties = {
-  width: '16px',
-  height: '16px',
-  borderRadius: '50%',
-  background: 'var(--color-bg-card)',
+const thumbStyle: CSSProperties = {
   position: 'absolute',
   top: '2px',
-  transition: 'left 0.2s',
+  width: '18px',
+  height: '18px',
+  borderRadius: '50%',
+  background: 'var(--color-bg-card)',
   boxShadow: 'var(--shadow-toggle-thumb)',
+  transition: 'left 0.16s ease',
 };
 
 export default function BooleanFilter({ label, value, onChange }: BooleanFilterProps) {
@@ -55,7 +61,7 @@ export default function BooleanFilter({ label, value, onChange }: BooleanFilterP
     } else if (value === true) {
       onChange(false);
     } else {
-      onChange(undefined); // cycle: undefined → true → false → undefined
+      onChange(undefined);
     }
   };
 
@@ -63,28 +69,26 @@ export default function BooleanFilter({ label, value, onChange }: BooleanFilterP
     <div style={containerStyle}>
       <span style={labelStyle}>
         {label}
-        {value !== undefined && (
-          <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginLeft: '6px' }}>
-            ({value ? 'Yes' : 'No'})
-          </span>
-        )}
+        {value !== undefined ? <span style={stateStyle}>({value ? 'Yes' : 'No'})</span> : null}
       </span>
       <button
+        type="button"
         style={{
-          ...toggleTrackStyle,
-          background: value === undefined
-            ? 'var(--color-border)'
-            : isOn
-              ? 'var(--color-cta-primary)'
-              : 'var(--color-icon-border)',
+          ...trackStyle,
+          background:
+            value === undefined
+              ? 'var(--color-border-strong)'
+              : isOn
+                ? 'var(--color-cta-primary)'
+                : 'var(--color-icon-border)',
         }}
         onClick={handleClick}
         aria-label={`Toggle ${label}`}
       >
-        <div
+        <span
           style={{
-            ...toggleThumbStyle,
-            left: value === undefined ? '10px' : isOn ? '18px' : '2px',
+            ...thumbStyle,
+            left: value === undefined ? '11px' : isOn ? '20px' : '2px',
           }}
         />
       </button>

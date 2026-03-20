@@ -20,37 +20,41 @@ const barStyle: CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
   alignItems: 'flex-end',
-  gap: '12px',
-  padding: '12px 0',
+  gap: '16px',
+  padding: '16px 0 12px',
 };
 
 const moreFiltersContainerStyle: CSSProperties = {
   borderTop: '1px solid var(--color-border)',
-  padding: '16px 0 8px',
-  marginTop: '4px',
+  padding: '20px 0 8px',
+  marginTop: '8px',
 };
 
 const moreFilterGridStyle: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-  gap: '16px',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+  gap: '18px 16px',
   alignItems: 'start',
 };
 
 const toggleBtnStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '4px',
-  padding: '6px 12px',
-  border: '1px dashed var(--color-border)',
+  gap: '6px',
+  minHeight: 'var(--height-button-sm)',
+  padding: '0 12px',
+  border: '1px solid var(--color-border-strong)',
   borderRadius: 'var(--radius-input)',
   fontSize: '13px',
-  color: 'var(--color-text-secondary)',
-  background: 'none',
+  fontWeight: 500,
+  color: 'var(--color-text-primary)',
+  background: 'var(--color-bg-card)',
   cursor: 'pointer',
   whiteSpace: 'nowrap',
   letterSpacing: '-0.25px',
   alignSelf: 'flex-end',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
+  transition: 'border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease',
 };
 
 function renderFilter(
@@ -175,8 +179,18 @@ export default function FilterBar({ filters, setFilter, removeFilter }: FilterBa
         <button
           style={{
             ...toggleBtnStyle,
-            borderColor: showMore || activeSecondaryCount > 0 ? 'var(--color-cta-primary)' : 'var(--color-border)',
-            color: showMore || activeSecondaryCount > 0 ? 'var(--color-cta-primary)' : 'var(--color-text-secondary)',
+            borderColor:
+              showMore || activeSecondaryCount > 0
+                ? 'var(--color-border-input-focus)'
+                : 'var(--color-border-strong)',
+            color:
+              showMore || activeSecondaryCount > 0
+                ? 'var(--color-cta-primary)'
+                : 'var(--color-text-primary)',
+            boxShadow:
+              showMore || activeSecondaryCount > 0
+                ? 'var(--shadow-focus)'
+                : toggleBtnStyle.boxShadow,
           }}
           onClick={() => setShowMore(!showMore)}
         >
@@ -186,8 +200,8 @@ export default function FilterBar({ filters, setFilter, removeFilter }: FilterBa
               style={{
                 background: 'var(--color-cta-primary)',
                 color: 'var(--color-bg-card)',
-                borderRadius: '10px',
-                padding: '1px 7px',
+                borderRadius: '999px',
+                padding: '1px 8px',
                 fontSize: '11px',
                 fontWeight: 600,
                 marginLeft: '2px',

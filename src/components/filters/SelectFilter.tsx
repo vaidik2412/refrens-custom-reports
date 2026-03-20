@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useState, useRef, useEffect } from 'react';
+import { CSSProperties, useEffect, useRef, useState } from 'react';
 import type { FilterOption } from '@/types';
 
 interface SelectFilterProps {
@@ -11,112 +11,158 @@ interface SelectFilterProps {
   placeholder?: string;
 }
 
+const labelStyle: CSSProperties = {
+  marginBottom: '6px',
+  fontSize: '11px',
+  fontWeight: 600,
+  lineHeight: '16px',
+  letterSpacing: '0.5px',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-secondary)',
+};
+
 const triggerStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '6px',
-  padding: '6px 10px',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  fontSize: '13px',
-  fontWeight: 400,
-  color: 'var(--color-text-primary)',
-  background: 'var(--color-bg-card)',
-  cursor: 'pointer',
-  whiteSpace: 'nowrap',
-  letterSpacing: '-0.25px',
-  minWidth: '120px',
   justifyContent: 'space-between',
+  gap: '8px',
+  minWidth: '140px',
+  minHeight: 'var(--height-input)',
+  padding: '0 12px',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: 'var(--radius-input)',
+  background: 'var(--color-bg-card)',
+  boxShadow: '0 1px 2px rgba(20, 28, 39, 0.04)',
+  fontSize: '13px',
+  lineHeight: '20px',
+  letterSpacing: '-0.25px',
 };
 
 const menuStyle: CSSProperties = {
   position: 'absolute',
-  top: 'calc(100% + 4px)',
+  top: 'calc(100% + 6px)',
   left: 0,
-  background: 'var(--color-bg-card)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  boxShadow: 'var(--shadow-l1)',
-  zIndex: 40,
-  minWidth: '180px',
-  maxHeight: '240px',
+  minWidth: '220px',
+  maxHeight: '280px',
   overflowY: 'auto',
-  padding: '4px 0',
+  padding: '6px 0',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: '12px',
+  background: 'var(--color-bg-card)',
+  boxShadow: 'var(--shadow-popover)',
+  zIndex: 60,
 };
 
-const optStyle: CSSProperties = {
+const optionStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  padding: '7px 12px',
-  fontSize: '13px',
-  color: 'var(--color-text-primary)',
-  cursor: 'pointer',
-  border: 'none',
-  background: 'none',
   width: '100%',
+  padding: '9px 12px',
+  border: 'none',
+  background: 'transparent',
   textAlign: 'left',
+  fontSize: '13px',
+  lineHeight: '20px',
   letterSpacing: '-0.25px',
+  color: 'var(--color-text-primary)',
 };
 
-export default function SelectFilter({ label, value, options, onChange, placeholder }: SelectFilterProps) {
+export default function SelectFilter({
+  label,
+  value,
+  options,
+  onChange,
+  placeholder,
+}: SelectFilterProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    const handleClick = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
     };
+
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
   }, []);
 
-  const selected = options.find((o) => o.value === value);
+  const selected = options.find((option) => option.value === value);
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        {label}
-      </div>
+      <div style={labelStyle}>{label}</div>
       <button
+        type="button"
         style={{
           ...triggerStyle,
+          borderColor: open ? 'var(--color-border-input-focus)' : 'var(--color-border-strong)',
+          boxShadow: open ? 'var(--shadow-focus)' : triggerStyle.boxShadow,
           color: selected ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-          borderColor: open ? 'var(--color-cta-primary)' : 'var(--color-border)',
         }}
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((current) => !current)}
       >
         <span>{selected?.label || placeholder || 'Select...'}</span>
-        <span style={{ fontSize: '10px', opacity: 0.5 }}>&#x25BC;</span>
+        <span style={{ fontSize: '10px', color: 'var(--color-icon-muted)' }}>&#x25BE;</span>
       </button>
-      {open && (
+      {open ? (
         <div style={menuStyle}>
-          {value && (
+          {value ? (
             <button
-              style={{ ...optStyle, color: 'var(--color-text-secondary)', fontStyle: 'italic' }}
-              onClick={() => { onChange(undefined); setOpen(false); }}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = 'var(--color-bg-alt)'; }}
-              onMouseLeave={(e) => { (e.target as HTMLElement).style.background = 'none'; }}
+              type="button"
+              style={{ ...optionStyle, color: 'var(--color-text-secondary)', fontStyle: 'italic' }}
+              onClick={() => {
+                onChange(undefined);
+                setOpen(false);
+              }}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.background = 'var(--color-menu-hover)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.background = 'transparent';
+              }}
             >
               Clear
             </button>
-          )}
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              style={{
-                ...optStyle,
-                fontWeight: opt.value === value ? 500 : 400,
-                background: opt.value === value ? 'var(--color-bg-alt)' : 'none',
-              }}
-              onClick={() => { onChange(opt.value); setOpen(false); }}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = 'var(--color-bg-alt)'; }}
-              onMouseLeave={(e) => { (e.target as HTMLElement).style.background = opt.value === value ? 'var(--color-bg-alt)' : 'none'; }}
-            >
-              {opt.label}
-            </button>
-          ))}
+          ) : null}
+          {options.map((option) => {
+            const isSelected = option.value === value;
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                style={{
+                  ...optionStyle,
+                  fontWeight: isSelected ? 500 : 400,
+                  color: isSelected ? 'var(--color-cta-primary)' : 'var(--color-text-primary)',
+                  background: isSelected ? 'var(--color-menu-selected)' : 'transparent',
+                }}
+                onClick={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                }}
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.background = isSelected
+                    ? 'var(--color-menu-selected)'
+                    : 'var(--color-menu-hover)';
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.background = isSelected
+                    ? 'var(--color-menu-selected)'
+                    : 'transparent';
+                }}
+              >
+                {option.label}
+              </button>
+            );
+          })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
