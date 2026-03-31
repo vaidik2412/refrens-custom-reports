@@ -1,5 +1,6 @@
 'use client';
 
+import { CSSProperties } from 'react';
 import { createColumnHelper } from '@tanstack/react-table';
 import { BILL_TYPE_OPTIONS } from '@/lib/constants';
 import type { SavedQuery, SystemReport } from '@/types';
@@ -29,6 +30,21 @@ function formatDate(dateStr: string | null): string {
   const d = new Date(dateStr);
   return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
+
+// ── Styles ─────────────────────────────────────────────────────────────
+
+const editBtnStyle: CSSProperties = {
+  padding: '4px 10px',
+  fontSize: '12px',
+  fontWeight: 500,
+  color: 'var(--color-cta-primary)',
+  background: 'none',
+  border: '1px solid var(--color-cta-primary)',
+  borderRadius: 'var(--radius-tag)',
+  cursor: 'pointer',
+  letterSpacing: '-0.25px',
+  whiteSpace: 'nowrap',
+};
 
 // ── Columns ────────────────────────────────────────────────────────────
 
@@ -85,5 +101,36 @@ export const reportColumns = [
     cell: (info) => formatDate(info.getValue()),
     size: 120,
     meta: { cellStyle: { fontSize: '12px', whiteSpace: 'nowrap', color: 'var(--color-text-secondary)' } },
+  }),
+  col.display({
+    id: 'actions',
+    header: '',
+    size: 80,
+    cell: (info) => {
+      const row = info.row.original;
+      const isSystem = 'isSystem' in row.source && row.source.isSystem;
+      if (isSystem) return null;
+      return (
+        <button
+          type="button"
+          style={editBtnStyle}
+          onClick={(e) => {
+            e.stopPropagation();
+            window.location.href = `/reports/edit/${row.id}`;
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = 'var(--color-cta-primary)';
+            (e.currentTarget as HTMLElement).style.color = '#fff';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = 'none';
+            (e.currentTarget as HTMLElement).style.color = 'var(--color-cta-primary)';
+          }}
+        >
+          Edit
+        </button>
+      );
+    },
+    enableSorting: false,
   }),
 ];

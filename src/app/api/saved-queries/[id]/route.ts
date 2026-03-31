@@ -43,6 +43,7 @@ export async function PATCH(
     if (body.displayName !== undefined) updateFields.displayName = body.displayName;
     if (body.description !== undefined) updateFields.description = body.description;
     if (body.isArchived !== undefined) updateFields.isArchived = body.isArchived;
+    if (body.queryGroupTree !== undefined) updateFields.queryGroupTree = body.queryGroupTree;
 
     const result = await collection.findOneAndUpdate(
       { _id: new ObjectId(id) },

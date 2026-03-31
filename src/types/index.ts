@@ -56,6 +56,8 @@ export interface SavedQuery {
   isDefault?: boolean;
   /** Nature of Business category for default report grouping */
   nob?: string;
+  /** The query builder condition tree — used to reconstruct the builder UI in edit mode */
+  queryGroupTree?: import('@/types/query-builder').QueryGroup;
 }
 
 export type BillType =

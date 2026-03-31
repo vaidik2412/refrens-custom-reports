@@ -15,7 +15,7 @@ import { aiFiltersToQueryGroup } from '@/lib/ai-filters-to-conditions';
 import { getFieldEntry, getFieldsForBillType } from '@/lib/field-registry';
 import { encodeFilters } from '@/lib/url-encoding';
 import type { QueryGroup, QueryCondition } from '@/types/query-builder';
-import type { DateFieldConfig, SortParam } from '@/types';
+import type { DateFieldConfig, SavedQuery, SortParam } from '@/types';
 
 // ── Styles ──────────────────────────────────────────────────────────
 
@@ -129,18 +129,57 @@ function hasValidConditions(group: QueryGroup): boolean {
 
 // ── Component ───────────────────────────────────────────────────────
 
-export default function QueryBuilderPage() {
+interface QueryBuilderPageProps {
+  /** When provided, the builder opens in edit mode for this report */
+  existingReport?: SavedQuery;
+}
+
+export default function QueryBuilderPage({ existingReport }: QueryBuilderPageProps = {}) {
   const router = useRouter();
-  const { createQuery } = useSavedQueries();
+  const { createQuery, updateQuery } = useSavedQueries();
+  const isEditMode = !!existingReport;
 
   // Step 1: Bill Type
-  const [billType, setBillType] = useState<string | null>(null);
+  const [billType, setBillType] = useState<string | null>(
+    existingReport?.query?.billType || null
+  );
 
-  // Step 2: Conditions
-  const [group, setGroup] = useState<QueryGroup>(createEmptyGroup);
+  // Step 2: Conditions — restore from queryGroupTree if available, else reconstruct from query
+  const [group, setGroup] = useState<QueryGroup>(() => {
+    if (existingReport?.queryGroupTree) {
+      return existingReport.queryGroupTree;
+    }
+    if (existingReport?.query) {
+      // Reconstruct conditions from the saved mongo query
+      const queryWithoutBillType = { ...existingReport.query };
+      delete queryWithoutBillType.billType;
 
-  // Preview
-  const [previewQuery, setPreviewQuery] = useState<Record<string, any> | null>(null);
+      // Also merge in date fields that were extracted from query
+      if (existingReport.dateFields) {
+        for (const df of existingReport.dateFields) {
+          if (df.dateBehaviour === 'dynamic' && df.dynamicPreset) {
+            queryWithoutBillType[df.accessor] = { $dynamic: df.dynamicPreset };
+          } else if (df.fixedDateRange) {
+            queryWithoutBillType[df.accessor] = df.fixedDateRange;
+          }
+        }
+      }
+
+      const filters = Object.entries(queryWithoutBillType).map(([key, value]) => ({ key, value }));
+      if (filters.length > 0) {
+        return aiFiltersToQueryGroup(filters);
+      }
+    }
+    return createEmptyGroup();
+  });
+
+  // Preview — in edit mode, start with the existing query so results show immediately
+  const [previewQuery, setPreviewQuery] = useState<Record<string, any> | null>(() => {
+    if (existingReport && billType) {
+      return conditionsToMongoQuery(billType, group);
+    }
+    return null;
+  });
   const [previewSort, setPreviewSort] = useState<SortParam | undefined>(undefined);
   const stableEmptyQuery = useMemo(() => ({}), []);
   const { data, total, loading, page, setPage, limit } = useInvoices(previewQuery || stableEmptyQuery, previewSort);
@@ -265,16 +304,26 @@ export default function QueryBuilderPage() {
         }
       }
 
+      const redirectQuery = previewQuery || conditionsToMongoQuery(billType!, group);
+      const encoded = encodeFilters(redirectQuery);
+
+      if (isEditMode && existingReport) {
+        const updated = await updateQuery(existingReport._id, {
+          ...payload,
+          dateFields,
+          query,
+          queryGroupTree: group,
+        } as any);
+        router.push(`/reports/invoices?fq=${encoded}&reportId=${existingReport._id}&reportKind=saved`);
+        return updated;
+      }
+
       const created = await createQuery({
         ...payload,
         dateFields,
         query,
         queryGroupTree: group,
       });
-      // Build redirect URL using the full preview query (which includes resolved dates)
-      // so the initial results match what the user just previewed.
-      const redirectQuery = previewQuery || conditionsToMongoQuery(billType!, group);
-      const encoded = encodeFilters(redirectQuery);
       router.push(`/reports/invoices?fq=${encoded}`);
       return created;
     },
@@ -293,7 +342,7 @@ export default function QueryBuilderPage() {
           &larr; Reports
         </button>
       </div>
-      <h1 style={titleStyle}>Create New Report</h1>
+      <h1 style={titleStyle}>{isEditMode ? 'Edit Report' : 'Create New Report'}</h1>
 
       {/* AI Report Prompt */}
       <div style={sectionStyle}>
@@ -351,7 +400,7 @@ export default function QueryBuilderPage() {
             setShowSaveModal(true);
           }}
         >
-          Save Report
+          {isEditMode ? 'Update Report' : 'Save Report'}
         </Button>
       </div>
 
@@ -389,9 +438,10 @@ export default function QueryBuilderPage() {
         onClose={() => setShowSaveModal(false)}
         onSave={handleSave}
         filters={previewQuery || stableEmptyQuery}
-        saveAsNew
+        existingReport={isEditMode ? existingReport : undefined}
+        saveAsNew={!isEditMode}
         hideDateBehaviour
-        defaultName={aiSuggestedName}
+        defaultName={isEditMode ? existingReport?.displayName : aiSuggestedName}
       />
     </div>
   );
