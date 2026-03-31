@@ -7,9 +7,11 @@ import ConditionList from './ConditionList';
 import Button from '@/components/ui/Button';
 import InvoiceTable from '@/components/reports/InvoiceTable';
 import SaveReportModal from '@/components/reports/SaveReportModal';
+import AIReportPrompt from '@/components/reports/AIReportPrompt';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useSavedQueries } from '@/hooks/useSavedQueries';
 import { conditionsToMongoQuery } from '@/lib/conditions-to-mongo';
+import { aiFiltersToQueryGroup } from '@/lib/ai-filters-to-conditions';
 import { getFieldEntry, getFieldsForBillType } from '@/lib/field-registry';
 import { encodeFilters } from '@/lib/url-encoding';
 import type { QueryGroup, QueryCondition } from '@/types/query-builder';
@@ -146,6 +148,31 @@ export default function QueryBuilderPage() {
   // Save modal
   const [showSaveModal, setShowSaveModal] = useState(false);
 
+  // AI-generated report
+  const [aiSuggestedName, setAiSuggestedName] = useState<string | undefined>(undefined);
+
+  const handleAIFiltersGenerated = useCallback(
+    (query: Record<string, any>, suggestedName?: string) => {
+      // Extract billType from AI query if present, default to INVOICE
+      const aiQuery = { ...query };
+      const aiBillType = aiQuery.billType || 'INVOICE';
+      delete aiQuery.billType;
+
+      setBillType(aiBillType);
+      setAiSuggestedName(suggestedName);
+
+      // Convert AI filters to conditions so the condition builder shows them
+      const filters = Object.entries(aiQuery).map(([key, value]) => ({ key, value }));
+      const newGroup = aiFiltersToQueryGroup(filters);
+      setGroup(newGroup);
+
+      // Derive preview query from conditions (resolves dynamic dates properly)
+      const resolvedQuery = conditionsToMongoQuery(aiBillType, newGroup);
+      setPreviewQuery(resolvedQuery);
+    },
+    []
+  );
+
   const handleBillTypeChange = useCallback(
     (newBillType: string) => {
       const subGroups = group.groups || [];
@@ -186,8 +213,9 @@ export default function QueryBuilderPage() {
     [billType, group]
   );
 
+  const hasAIQuery = previewQuery !== null && !hasValidConditions(group);
   const canPreview = billType !== null && hasValidConditions(group);
-  const canSave = billType !== null && hasValidConditions(group);
+  const canSave = billType !== null && (hasValidConditions(group) || hasAIQuery);
 
   const handlePreview = useCallback(() => {
     if (!billType) return;
@@ -267,6 +295,31 @@ export default function QueryBuilderPage() {
       </div>
       <h1 style={titleStyle}>Create New Report</h1>
 
+      {/* AI Report Prompt */}
+      <div style={sectionStyle}>
+        <h2 style={sectionTitleStyle}>Describe your report</h2>
+        <AIReportPrompt
+          onFiltersGenerated={handleAIFiltersGenerated}
+          total={previewQuery ? total : undefined}
+          previewLoading={loading}
+        />
+      </div>
+
+      {/* Divider */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+        color: 'var(--color-text-secondary)',
+        fontSize: '13px',
+        fontWeight: 500,
+        letterSpacing: '-0.25px',
+      }}>
+        <div style={{ flex: 1, height: '1px', background: 'var(--color-border)' }} />
+        <span>or build manually</span>
+        <div style={{ flex: 1, height: '1px', background: 'var(--color-border)' }} />
+      </div>
+
       {/* Step 1: Bill Type */}
       <div style={sectionStyle}>
         <h2 style={sectionTitleStyle}>1. Select Document Type</h2>
@@ -338,6 +391,7 @@ export default function QueryBuilderPage() {
         filters={previewQuery || stableEmptyQuery}
         saveAsNew
         hideDateBehaviour
+        defaultName={aiSuggestedName}
       />
     </div>
   );

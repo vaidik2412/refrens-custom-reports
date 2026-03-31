@@ -33,7 +33,7 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     key: 'status',
     label: 'Status',
     fieldType: 'enum',
-    operators: ENUM_OPERATORS,
+    operators: ENUM_EXCLUDE_OPERATORS,
     defaultOperator: '$eq',
     options: STATUS_OPTIONS,
     category: 'core',
@@ -150,17 +150,21 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     key: 'taxType',
     label: 'Tax Type',
     fieldType: 'enum',
-    operators: ENUM_OPERATORS,
+    operators: ENUM_EXCLUDE_OPERATORS,
     defaultOperator: '$eq',
     options: TAX_TYPE_OPTIONS,
     category: 'tax',
   },
   {
     key: 'igst',
-    label: 'IGST',
-    fieldType: 'boolean',
-    operators: BOOLEAN_OPERATORS,
+    label: 'GST Type',
+    fieldType: 'enum',
+    operators: ENUM_OPERATORS,
     defaultOperator: '$eq',
+    options: [
+      { label: 'IGST (Inter-state)', value: 'true' },
+      { label: 'CGST + SGST (Intra-state)', value: 'false' },
+    ],
     category: 'tax',
     billTypes: ['INVOICE', 'PROFORMAINV', 'CREDITNOTE', 'PURCHASEORDER', 'EXPENSERECEIPT', 'DELIVERYCHALAN'],
   },
@@ -313,6 +317,15 @@ export const FIELD_REGISTRY: FieldRegistryEntry[] = [
     options: CLIENT_TYPE_OPTIONS,
     category: 'core',
   },
+  {
+    key: 'billedTo._state',
+    label: 'Client State (GST)',
+    fieldType: 'enum',
+    operators: ENUM_EXCLUDE_OPERATORS,
+    defaultOperator: '$in',
+    options: GST_STATE_OPTIONS,
+    category: 'core',
+  },
 ];
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -367,6 +380,19 @@ export function getFieldsByCategoryForBillType(
     grouped[entry.category].push(entry);
   }
   return grouped;
+}
+
+/**
+ * Resolves the actual MongoDB field for the virtual `billedTo._state` key
+ * based on the country context.
+ * - IN (or unset) → billedTo.gstState (Indian GST state codes)
+ * - US, AE, MY    → billedTo.stateCode (country-specific state codes)
+ * - Others        → billedTo.state (free text)
+ */
+export function resolveStateMongoField(country?: string): string {
+  if (!country || country === 'IN') return 'billedTo.gstState';
+  if (['US', 'AE', 'MY'].includes(country)) return 'billedTo.stateCode';
+  return 'billedTo.state';
 }
 
 /** Date-specific operator labels (override the defaults for clarity) */

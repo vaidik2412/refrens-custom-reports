@@ -36,7 +36,9 @@ function resolveDynamicDate(value: any): { $gte: string; $lte: string } {
  * Converts a single QueryCondition into a MongoDB filter fragment.
  * Returns null if the condition should be skipped (empty value, etc).
  */
-function conditionToMongoFragment(condition: QueryCondition): Record<string, any> | null {
+function conditionToMongoFragment(
+  condition: QueryCondition
+): Record<string, any> | null {
   if (!condition.field) return null;
   if (condition.value === undefined || condition.value === null || condition.value === '') {
     return null;
@@ -58,7 +60,19 @@ function conditionToMongoFragment(condition: QueryCondition): Record<string, any
   }
 
   const fieldEntry = getFieldEntry(condition.field);
-  const mongoKey = fieldEntry?.mongoField || condition.field;
+  let mongoKey = fieldEntry?.mongoField || condition.field;
+
+  // Resolve virtual Client State field → always targets billedTo.gstState (India GST codes)
+  if (condition.field === 'billedTo._state') {
+    mongoKey = 'billedTo.gstState';
+  }
+
+  // Coerce igst enum strings ("true"/"false") to actual booleans for MongoDB
+  if (condition.field === 'igst' && typeof condition.value === 'string') {
+    const boolVal = condition.value === 'true';
+    return { [mongoKey]: boolVal };
+  }
+
   const op = condition.operator;
 
   if (op === '$between') {

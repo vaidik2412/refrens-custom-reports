@@ -25,6 +25,8 @@ interface SaveReportModalProps {
   saveAsNew?: boolean;
   /** Hide the date behaviour (Fixed/Dynamic) section — use when dates are explicitly set by query builder */
   hideDateBehaviour?: boolean;
+  /** Default name to pre-fill (e.g. from AI suggestion) */
+  defaultName?: string;
 }
 
 const fieldStyle: CSSProperties = {
@@ -88,6 +90,7 @@ export default function SaveReportModal({
   existingReport,
   saveAsNew = false,
   hideDateBehaviour = false,
+  defaultName,
 }: SaveReportModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -127,7 +130,7 @@ export default function SaveReportModal({
       }
       setDateConfigs(configs);
     } else {
-      setName(saveAsNew && existingReport ? `${existingReport.displayName} (Copy)` : '');
+      setName(saveAsNew && existingReport ? `${existingReport.displayName} (Copy)` : (defaultName || ''));
       setDescription(saveAsNew && existingReport ? existingReport.description || '' : '');
       // When hideDateBehaviour is true, the caller handles dateFields — skip auto-population
       if (hideDateBehaviour) {

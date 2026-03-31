@@ -872,7 +872,7 @@ export default function ValueInput({ fieldKey, operator, value, onChange }: Valu
   const fieldEntry = getFieldEntry(fieldKey);
   if (!fieldEntry) return null;
 
-  const { fieldType, options, searchEndpoint } = fieldEntry;
+  const { fieldType, searchEndpoint, options } = fieldEntry;
 
   // Boolean fields → Yes/No toggle
   if (fieldType === 'boolean') {
